@@ -33,6 +33,7 @@
 		<!-- </profile> -->
 		<project.scm.id>${FARMAFENE.GITHUB.SERVER.ID}</project.scm.id>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<maven-release-plugin>2.5.2</maven-release-plugin>
 		<maven-javadoc-plugin>2.10.3</maven-javadoc-plugin>
 		<maven-compliler-plugin>2.3.2</maven-compliler-plugin>
