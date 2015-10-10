@@ -29,6 +29,11 @@
 		<!-- <FARMAFENE.distributionManagement.RELEASES />: @Url of your Releases@ -->
 		<!-- <FARMAFENE.distributionManagement.SNAPSHOT.ID />: @Id of Server Snapshots@ -->
 		<!-- <FARMAFENE.distributionManagement.SNAPSHOT />: @Url of your Snapshots@ -->
+		<!-- <FARMAFENE.keystore />@Your keystore Location@ -->
+		<!-- <FARMAFENE.keystore.password />@Your keystore password@ -->
+		<!-- <FARMAFENE.keystore.alias />@Your key alias in keystore@ -->
+		<!-- <FARMAFENE.keystore.alias.password />@Your password for alias@ -->
+		<!-- <FARMAFENE.keystore.type />@Your keystore type@ -->
 		<!-- </properties> -->
 		<!-- </profile> -->
 		<project.scm.id>${FARMAFENE.GITHUB.SERVER.ID}</project.scm.id>

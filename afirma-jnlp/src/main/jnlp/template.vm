@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <jnlp spec="1.0+" codebase="https://dev.farmafene.com/jnlp/afirma" href="$outputFile">
  <information>
-    <title>Swing Webstart Maven Project</title>
-    <vendor>ShaunAbram</vendor>
+    <title>@firma - Jnlp</title>
+    <vendor>Farmafene.com</vendor>
  </information>
  <security>
  	<all-permissions/>

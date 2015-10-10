@@ -32,11 +32,11 @@
 					</jnlp>
 					<libPath>lib</libPath>
 					<sign>
-						<keystore>${basedir}/src/main/jks/keystore.jks</keystore>
-						<keypass>changeit</keypass>
-						<storepass>changeit</storepass>
-						<storetype>jks</storetype>
-						<alias>codesigner_test</alias>
+						<keystore>${FARMAFENE.keystore}</keystore>
+						<storepass>${FARMAFENE.keystore.password}</storepass>
+						<keypass>${FARMAFENE.keystore.alias.password}</keypass>
+						<storetype>${FARMAFENE.keystore.type}</storetype>
+						<alias>${FARMAFENE.keystore.alias}</alias>
 						<verify>true</verify>
 					</sign>
 
@@ -65,6 +65,12 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jcl-over-slf4j</artifactId>
+			<optional>false</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<optional>false</optional>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
