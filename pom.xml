@@ -3,10 +3,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.farmafene.afirma</groupId>
 	<artifactId>afirma-make</artifactId>
-	<version>1.1.0-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>afirma_ui_miniapplet</module>
+		<module>afirma-jnlp</module>
 	</modules>
 	<properties>
 		<!-- -->
@@ -17,20 +18,17 @@
 		<!-- <activation> -->
 		<!-- <activeByDefault>false</activeByDefault> -->
 		<!-- </activation> -->
-		<!-- <id>GitHub</id> -->
+		<!-- <id>@Your profile@</id> -->
 		<!-- <properties> -->
-		<!-- <FARMAFENE.GITHUB.SERVER.ID>@Id of Server in .m2/setting.xml@</FARMAFENE.GITHUB.SERVER.ID> -->
-		<!-- <FARMAFENE.repository.SNAPSHOT.ID>@Id of Server Snapshots in .m2/setting.xml@</FARMAFENE.repository.SNAPSHOT.ID> -->
-		<!-- <FARMAFENE.repository.SNAPSHOT>@Url of your Snapshot Repositoy@</FARMAFENE.repository.SNAPSHOT> -->
-		<!-- <FARMAFENE.repository.RELEASES.ID>@Id of Server releases in .m2/setting.xml@</FARMAFENE.repository.RELEASES.ID> -->
-		<!-- <FARMAFENE.repository.RELEASES>@Url of your Releases Repositoy@</FARMAFENE.repository.RELEASES> -->
-		<!-- <FARMAFENE.distributionManagement.RELEASES.ID>@Id of Server releases 
-			in .m2/setting.xml@</FARMAFENE.distributionManagement.RELEASES.ID> -->
-		<!-- <FARMAFENE.distributionManagement.RELEASES>@Url of your Releases DistributionManagement@</FARMAFENE.distributionManagement.RELEASES> -->
-		<!-- <FARMAFENE.distributionManagement.SNAPSHOT.ID>@Id of Server Snapshots 
-			in .m2/setting.xml@</FARMAFENE.distributionManagement.SNAPSHOT.ID> -->
-		<!-- <FARMAFENE.distributionManagement.SNAPSHOT>@Url of your Snapshots 
-			DistributionManagement@</FARMAFENE.distributionManagement.SNAPSHOT> -->
+		<!-- <FARMAFENE.GITHUB.SERVER.ID />: @Id of Server in .m2/setting.xml@ -->
+		<!-- <FARMAFENE.repository.SNAPSHOT.ID />:@Id of Server Snapshots in .m2/setting.xml@ -->
+		<!-- <FARMAFENE.repository.SNAPSHOT />: @Url of your Snapshot Repositoy@ -->
+		<!-- <FARMAFENE.repository.RELEASES.ID />: @Id of Server releases in .m2/setting.xml@ -->
+		<!-- <FARMAFENE.repository.RELEASES />: @Url of your Releases Repositoy@ -->
+		<!-- <FARMAFENE.distributionManagement.RELEASES.ID />: @Id of Server releases@ -->
+		<!-- <FARMAFENE.distributionManagement.RELEASES />: @Url of your Releases@ -->
+		<!-- <FARMAFENE.distributionManagement.SNAPSHOT.ID />: @Id of Server Snapshots@ -->
+		<!-- <FARMAFENE.distributionManagement.SNAPSHOT />: @Url of your Snapshots@ -->
 		<!-- </properties> -->
 		<!-- </profile> -->
 		<project.scm.id>${FARMAFENE.GITHUB.SERVER.ID}</project.scm.id>
@@ -43,11 +41,8 @@
 		<wagon-webdav-jackrabbit>2.9</wagon-webdav-jackrabbit>
 		<jdk.version>1.7</jdk.version>
 		<maven-scm-plugin>1.9.4</maven-scm-plugin>
-		<!-- -->
-		<!-- -->
-		<!-- Other configuration -->
-		<!-- -->
-		<maven.deploy.skip>true</maven.deploy.skip>
+		<webstart-maven-plugin>1.0-beta-6</webstart-maven-plugin>
+		<maven-jar-plugin>2.6</maven-jar-plugin>
 		<!-- -->
 		<!-- -->
 		<!-- Project Dependencies -->
@@ -109,6 +104,7 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>${maven-compliler-plugin}</version>
 				</plugin>
@@ -136,6 +132,16 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-dependency-plugin</artifactId>
 					<version>${maven-dependency-plugin}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>${maven-jar-plugin}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>webstart-maven-plugin</artifactId>
+					<version>${webstart-maven-plugin}</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
