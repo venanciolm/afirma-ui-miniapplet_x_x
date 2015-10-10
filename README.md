@@ -1,4 +1,4 @@
-#commons-j2ee-tools
+#@firma-ui-jnlp
 
 JNLP Project for @firma
 
