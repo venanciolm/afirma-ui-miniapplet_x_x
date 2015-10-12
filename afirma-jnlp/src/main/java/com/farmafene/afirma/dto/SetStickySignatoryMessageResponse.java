@@ -26,6 +26,6 @@ package com.farmafene.afirma.dto;
 import java.io.Serializable;
 
 @SuppressWarnings("serial")
-public class SetStickySignatoryMessageResponse extends BooleanMessageResponse implements
-		Serializable {
+public class SetStickySignatoryMessageResponse extends BooleanMessageResponse
+		implements Serializable {
 }

@@ -253,6 +253,180 @@ public class EchoRest {
 			response.setDescError(e);
 		}
 		return response;
+=======
+	 * @param algorithm
+	 * @param format
+	 * @param extraParams
+	 * @return
+	 * @throws PrivilegedActionException
+	 * @throws IOException
+	 * @throws AOException
+	 * @throws CertificateEncodingException
+	 * @throws IncompatiblePolicyException
+	 * @see es.gob.afirma.miniapplet.MiniAfirma#sign(java.lang.String,
+	 *      java.lang.String, java.lang.String)
+	 */
+	@POST
+	@Path("sign")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public SignMessageResponse sign(SignMessageRequest msg) {
+		SignMessageResponse response = new SignMessageResponse();
+		try {
+			response.setMsg(wrapper.sign(msg.getAlgorithm(), msg.getFormat(),
+					msg.getExtraParams()));
+		} catch (Exception e) {
+			response.setError(1);
+			response.setDescError(e);
+		}
+		return response;
+	}
+
+	/**
+	 * @param sticky
+	 * @see es.gob.afirma.miniapplet.MiniAfirma#setStickySignatory(boolean)
+	 */
+	@POST
+	@Path("setStickySignatory")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public SetStickySignatoryMessageResponse setStickySignatory(
+			SetStickySignatoryMessageRequest request) {
+		SetStickySignatoryMessageResponse response = new SetStickySignatoryMessageResponse();
+		try {
+			wrapper.setStickySignatory(request.getSticky());
+		} catch (Exception e) {
+			response.setError(1);
+			response.setDescError(e);
+		}
+		return response;
+	}
+
+	/**
+	 * @param data
+	 * @param algorithm
+	 * @param format
+	 * @param extraParams
+	 * @return
+	 * @throws PrivilegedActionException
+	 * @throws IOException
+	 * @throws AOException
+	 * @throws CertificateEncodingException
+	 * @throws IncompatiblePolicyException
+	 * @see es.gob.afirma.miniapplet.MiniAfirma#coSign(java.lang.String,
+	 *      java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@POST
+	@Path("coSign")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public CoSignMessageResponse coSign(CoSignMessageRequest request) {
+		CoSignMessageResponse response = new CoSignMessageResponse();
+		try {
+			response.setMsg(wrapper.coSign(request.getData(),
+					request.getAlgorithm(), request.getFormat(),
+					request.getExtraParams()));
+		} catch (Exception e) {
+			response.setError(1);
+			response.setDescError(e);
+		}
+		return response;
+	}
+
+	/**
+	 * @param algorithm
+	 * @param format
+	 * @param extraParams
+	 * @return
+	 * @throws PrivilegedActionException
+	 * @throws IOException
+	 * @throws AOException
+	 * @throws CertificateEncodingException
+	 * @throws IncompatiblePolicyException
+	 * @see es.gob.afirma.miniapplet.MiniAfirma#counterSign(java.lang.String,
+	 *      java.lang.String, java.lang.String)
+	 */
+	@POST
+	@Path("counterSign")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public CounterSignMessageResponse counterSign(
+			CounterSignMessageRequest request) {
+		CounterSignMessageResponse response = new CounterSignMessageResponse();
+		try {
+			response.setMsg(wrapper.counterSign(request.getAlgorithm(),
+					request.getFormat(), request.getExtraParams()));
+		} catch (Exception e) {
+			response.setError(1);
+			response.setDescError(e);
+		}
+		return response;
+	}
+
+	/**
+	 * @param title
+	 * @param fileName
+	 * @param extension
+	 * @param description
+	 * @return
+	 * @throws PrivilegedActionException
+	 * @throws IOException
+	 * @see es.gob.afirma.miniapplet.MiniAfirma#saveDataToFile(java.lang.String,
+	 *      java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@POST
+	@Path("saveDataToFile")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public SaveDataToFileMessageResponse saveDataToFile(
+			SaveDataToFileMessageRequest request){
+		SaveDataToFileMessageResponse response = new SaveDataToFileMessageResponse();
+		try {
+			response.setMsg(wrapper.saveDataToFile(request.getTitle(),
+					request.getFileName(), request.getExtension(),
+					request.getDescription()));
+		} catch (Exception e) {
+			response.setError(1);
+			response.setDescError(e);
+		}
+		return response;
+	}
+
+	/**
+	 * @param title
+	 * @param extensions
+	 * @param description
+	 * @param filePath
+	 * @return
+	 * @throws IOException
+	 * @throws PrivilegedActionException
+	 * @see es.gob.afirma.miniapplet.MiniAfirma#getFileNameContentBase64(java.lang.String,
+	 *      java.lang.String, java.lang.String, java.lang.String)
+	 */
+	public String getFileNameContentBase64(String title, String extensions,
+			String description, String filePath) throws IOException,
+			PrivilegedActionException {
+		return wrapper.getFileNameContentBase64(title, extensions, description,
+				filePath);
+	}
+
+	/**
+	 * @param title
+	 * @param extensions
+	 * @param description
+	 * @param filePath
+	 * @return
+	 * @throws IOException
+	 * @throws PrivilegedActionException
+	 * @see es.gob.afirma.miniapplet.MiniAfirma#getMultiFileNameContentBase64(java.lang.String,
+	 *      java.lang.String, java.lang.String, java.lang.String)
+	 */
+	public String[] getMultiFileNameContentBase64(String title,
+			String extensions, String description, String filePath)
+			throws IOException, PrivilegedActionException {
+		return wrapper.getMultiFileNameContentBase64(title, extensions,
+				description, filePath);
+>>>>>>> branch 'development' of https://github.com/venanciolm/afirma-ui-miniapplet_x_x.git
 	}
 
 	/**
