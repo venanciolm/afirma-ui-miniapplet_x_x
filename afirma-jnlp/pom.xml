@@ -64,6 +64,11 @@
 	</build>
 	<dependencies>
 		<dependency>
+			<groupId>es.gob.afirma</groupId>
+			<artifactId>afirma-ui-miniapplet_1_3</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jcl-over-slf4j</artifactId>
 			<optional>false</optional>
