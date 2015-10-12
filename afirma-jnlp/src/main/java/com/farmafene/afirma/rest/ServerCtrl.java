@@ -23,18 +23,28 @@
  */
 package com.farmafene.afirma.rest;
 
+import java.util.concurrent.CountDownLatch;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ServerCtrl {
+
+	private static final String JERSEY_CONFIG_SERVER_PROVIDER_CLASSNAMES = "jersey.config.server.provider.classnames";
+	private static final Logger logger = LoggerFactory
+			.getLogger(ServerCtrl.class);
+	private Server jettyServer = null;
+	private CountDownLatch serverLatch = new CountDownLatch(1);
 
 	public void done() throws Exception {
 		ServletContextHandler context = new ServletContextHandler(
 				ServletContextHandler.SESSIONS);
 		context.setContextPath("/");
 
-		Server jettyServer = new Server(9999);
+		jettyServer = new Server(9999);
 		jettyServer.setHandler(context);
 
 		ServletHolder jerseyServlet = context.addServlet(
@@ -43,18 +53,45 @@ public class ServerCtrl {
 
 		// Tells the Jersey Servlet which REST service/class to load.
 		jerseyServlet.setInitParameter(
-				"jersey.config.server.provider.classnames",
+				JERSEY_CONFIG_SERVER_PROVIDER_CLASSNAMES,
 				EchoRest.class.getCanonicalName());
 
+		jettyServer.start();
+		logger.info("El servidor es: {} '{}'", jettyServer.getURI(),
+				jettyServer.getState());
+		serverLatch.await();
 		try {
-			jettyServer.start();
-			jettyServer.join();
-		} finally {
-			jettyServer.destroy();
+			context.stop();
+			jettyServer.stop();
+			logger.info("El servidor estado: '{}'", jettyServer.getState());
+		} catch (Exception e) {
+			logger.error("Excepción al destruir el servidor!", e);
 		}
 	}
 
 	public static void main(String... args) throws Exception {
 		new ServerCtrl().done();
+	}
+
+	/**
+	 * @return the jettyServer
+	 */
+	public Server getJettyServer() {
+		return jettyServer;
+	}
+
+	/**
+	 * @return the serverLatch
+	 */
+	public CountDownLatch getServerLatch() {
+		return serverLatch;
+	}
+
+	/**
+	 * @param serverLatch
+	 *            the serverLatch to set
+	 */
+	public void setServerLatch(CountDownLatch serverLatch) {
+		this.serverLatch = serverLatch;
 	}
 }
