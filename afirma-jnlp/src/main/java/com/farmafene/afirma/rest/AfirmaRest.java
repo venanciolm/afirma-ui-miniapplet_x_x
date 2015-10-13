@@ -23,8 +23,7 @@
  */
 package com.farmafene.afirma.rest;
 
-import java.io.IOException;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Executor;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -34,17 +33,24 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.farmafene.afirma.Main;
+import com.farmafene.afirma.dto.AddDataMessageRequest;
+import com.farmafene.afirma.dto.AddDataMessageResponse;
+import com.farmafene.afirma.dto.CmdMessageResponse;
 import com.farmafene.afirma.dto.CoSignMessageRequest;
 import com.farmafene.afirma.dto.CoSignMessageResponse;
 import com.farmafene.afirma.dto.CounterSignMessageRequest;
 import com.farmafene.afirma.dto.CounterSignMessageResponse;
-import com.farmafene.afirma.dto.EchoMsg;
+import com.farmafene.afirma.dto.EchoMessageResponse;
 import com.farmafene.afirma.dto.GetBase64FromTextMessageRequest;
 import com.farmafene.afirma.dto.GetBase64FromTextMessageResponse;
+import com.farmafene.afirma.dto.GetCurrentLogMessageResponse;
+import com.farmafene.afirma.dto.GetErrorMessageMessageResponse;
+import com.farmafene.afirma.dto.GetErrorTypeMessageResponse;
 import com.farmafene.afirma.dto.GetFileNameContentBase64MessageRequest;
 import com.farmafene.afirma.dto.GetFileNameContentBase64MessageResponse;
 import com.farmafene.afirma.dto.GetMultiFileNameContentBase64MessageRequest;
 import com.farmafene.afirma.dto.GetMultiFileNameContentBase64MessageResponse;
+import com.farmafene.afirma.dto.GetRemainingDataMessageResponse;
 import com.farmafene.afirma.dto.GetTextFromBase64MessageRequest;
 import com.farmafene.afirma.dto.GetTextFromBase64MessageResponse;
 import com.farmafene.afirma.dto.SaveDataToFileMessageRequest;
@@ -56,31 +62,40 @@ import com.farmafene.afirma.dto.SignMessageResponse;
 
 import es.gob.afirma.miniapplet.MiniAfirmaWrapper;
 
-@Path("/afirma")
-public class EchoRest {
+@Path("/")
+public class AfirmaRest {
 
 	private MiniAfirmaWrapper wrapper;
+	private Executor executor;
+
+	public AfirmaRest() {
+	}
 
 	@GET
-	@POST
-	@Path("test")
+	@Path("exit")
 	@Produces(MediaType.APPLICATION_JSON)
-	public EchoMsg test() {
-		final EchoMsg m = new EchoMsg();
-		m.setIn("In");
-		m.setOut("!out");
+	public CmdMessageResponse exit() {
+		final CmdMessageResponse m = new CmdMessageResponse();
+		m.setCall("exit");
 		return m;
 	}
 
 	@GET
-	@POST
+	@Path("test")
+	@Produces(MediaType.APPLICATION_JSON)
+	public CmdMessageResponse test() {
+		final CmdMessageResponse m = new CmdMessageResponse();
+		m.setCall("test");
+		return m;
+	}
+
+	@GET
 	@Path("open")
 	@Produces(MediaType.APPLICATION_JSON)
-	public EchoMsg open() {
-		final EchoMsg m = new EchoMsg();
-		m.setIn("In");
-		m.setOut("!out");
-		Executors.newSingleThreadExecutor().execute(new Runnable() {
+	public CmdMessageResponse open() {
+		final CmdMessageResponse m = new CmdMessageResponse();
+		m.setCall("open");
+		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
 				Main.item.doClick();
@@ -177,7 +192,6 @@ public class EchoRest {
 	}
 
 	/**
-	 *
 	 * @param request
 	 * @return
 	 * @see es.gob.afirma.miniapplet.MiniAfirma#getFileNameContentBase64(java.lang.String,
@@ -223,7 +237,6 @@ public class EchoRest {
 	}
 
 	/**
-	 *
 	 * @param request
 	 * @return
 	 * @see es.gob.afirma.miniapplet.MiniAfirma#saveDataToFile(java.lang.String,
@@ -292,48 +305,144 @@ public class EchoRest {
 	 * @return
 	 * @see es.gob.afirma.miniapplet.MiniAfirma#getErrorMessage()
 	 */
-	public String getErrorMessage() {
-		return this.wrapper.getErrorMessage();
+	@GET
+	@Path("getErrorMessage")
+	@Produces(MediaType.APPLICATION_JSON)
+	public GetErrorMessageMessageResponse getErrorMessage() {
+		final GetErrorMessageMessageResponse response = new GetErrorMessageMessageResponse();
+		try {
+			response.setMsg(this.wrapper.getErrorMessage());
+		} catch (final Exception e) {
+			response.setError(1);
+			response.setDescError(e);
+		}
+		return response;
 	}
 
 	/**
 	 * @return
 	 * @see es.gob.afirma.miniapplet.MiniAfirma#getErrorType()
 	 */
-	public String getErrorType() {
-		return this.wrapper.getErrorType();
+	@GET
+	@Path("getErrorType")
+	@Produces(MediaType.APPLICATION_JSON)
+	public GetErrorTypeMessageResponse getErrorType() {
+		final GetErrorTypeMessageResponse response = new GetErrorTypeMessageResponse();
+		try {
+			response.setMsg(this.wrapper.getErrorType());
+		} catch (final Exception e) {
+			response.setError(1);
+			response.setDescError(e);
+		}
+		return response;
 	}
 
 	/**
 	 * @return
 	 * @see es.gob.afirma.miniapplet.MiniAfirma#echo()
 	 */
-	public String echo() {
-		return this.wrapper.echo();
+	@GET
+	@Path("echo")
+	@Produces(MediaType.APPLICATION_JSON)
+	public EchoMessageResponse echo() {
+		final EchoMessageResponse response = new EchoMessageResponse();
+		try {
+			response.setMsg(this.wrapper.echo());
+		} catch (final Exception e) {
+			response.setError(1);
+			response.setDescError(e);
+		}
+		return response;
 	}
 
 	/**
+	 *
 	 * @return
-	 * @throws IOException
 	 * @see es.gob.afirma.miniapplet.MiniAfirma#getRemainingData()
 	 */
-	public String getRemainingData() throws IOException {
-		return this.wrapper.getRemainingData();
+	@GET
+	@Path("getRemainingData")
+	@Produces(MediaType.APPLICATION_JSON)
+	public GetRemainingDataMessageResponse getRemainingData() {
+		final GetRemainingDataMessageResponse response = new GetRemainingDataMessageResponse();
+		try {
+			response.setMsg(this.wrapper.getRemainingData());
+		} catch (final Exception e) {
+			response.setError(1);
+			response.setDescError(e);
+		}
+		return response;
 	}
 
 	/**
-	 * @param data
+	 *
+	 * @param request
+	 * @return
 	 * @see es.gob.afirma.miniapplet.MiniAfirma#addData(java.lang.String)
 	 */
-	public void addData(final String data) {
-		this.wrapper.addData(data);
+	@POST
+	@Path("addData")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public AddDataMessageResponse addData(final AddDataMessageRequest request) {
+		final AddDataMessageResponse response = new AddDataMessageResponse();
+		try {
+			this.wrapper.addData(request.getData());
+		} catch (final Exception e) {
+			response.setError(1);
+			response.setDescError(e);
+		}
+		return response;
 	}
 
 	/**
+	 *
 	 * @return
 	 * @see es.gob.afirma.miniapplet.MiniAfirma#getCurrentLog()
 	 */
-	public String getCurrentLog() {
-		return this.wrapper.getCurrentLog();
+	@GET
+	@Path("getCurrentLog")
+	@Produces(MediaType.APPLICATION_JSON)
+	public GetCurrentLogMessageResponse getCurrentLog() {
+		final GetCurrentLogMessageResponse response = new GetCurrentLogMessageResponse();
+		try {
+			response.setMsg(this.wrapper.getCurrentLog());
+		} catch (final Exception e) {
+			response.setError(1);
+			response.setDescError(e);
+		}
+		return response;
+	}
+
+	/**
+	 * Devuelve el valor de la propiedad 'wrapper'
+	 * @return Propiedad wrapper
+	 */
+	public MiniAfirmaWrapper getWrapper() {
+		return this.wrapper;
+	}
+
+	/**
+	 * Asigna el valor de la propiedad 'wrapper'
+	 * @param wrapper valor que se le quiere dar a la propiedad 'wrapper'
+	 */
+	public void setWrapper(final MiniAfirmaWrapper wrapper) {
+		this.wrapper = wrapper;
+	}
+
+	/**
+	 * Devuelve el valor de la propiedad 'executor'
+	 * @return Propiedad executor
+	 */
+	public Executor getExecutor() {
+		return this.executor;
+	}
+
+	/**
+	 * Asigna el valor de la propiedad 'executor'
+	 * @param executor valor que se le quiere dar a la propiedad 'executor'
+	 */
+	public void setExecutor(final Executor executor) {
+		this.executor = executor;
 	}
 }
