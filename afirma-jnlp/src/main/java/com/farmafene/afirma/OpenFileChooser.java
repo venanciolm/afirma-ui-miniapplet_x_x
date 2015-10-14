@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2009-2015 farmafene.com
  * All rights reserved.
- *
+ * 
  * Permission is hereby granted, free  of charge, to any person obtaining
  * a  copy  of this  software  and  associated  documentation files  (the
  * "Software"), to  deal in  the Software without  restriction, including
@@ -9,10 +9,10 @@
  * distribute,  sublicense, and/or sell  copies of  the Software,  and to
  * permit persons to whom the Software  is furnished to do so, subject to
  * the following conditions:
- *
+ * 
  * The  above  copyright  notice  and  this permission  notice  shall  be
  * included in all copies or substantial portions of the Software.
- *
+ * 
  * THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
  * EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
  * MERCHANTABILITY,    FITNESS    FOR    A   PARTICULAR    PURPOSE    AND
@@ -21,47 +21,49 @@
  * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.farmafene.afirma.dto;
+package com.farmafene.afirma;
 
-import java.io.Serializable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
 
-@SuppressWarnings("serial")
-public class CmdMessageResponse extends VoidMessageResponse implements Serializable {
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 
-	private String call;
+class OpenFileChooser implements ActionListener {
 
-	public CmdMessageResponse() {
+	private JFrame frame;
+
+	public OpenFileChooser(JFrame frame) {
+		this.frame = frame;
 	}
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * @see java.lang.Object#toString()
+	 * 
+	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
 	 */
 	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append(getClass().getSimpleName()).append(" [");
-		sb.append("call=").append(this.call);
-		sb.append(", time=").append(this.getTime());
-		sb.append(", id=").append(this.getId());
-		sb.append("]");
-		return sb.toString();
+	public void actionPerformed(final ActionEvent ae) {
+		final JFileChooser chooser = new JFileChooser();
+		frame.setAlwaysOnTop(true);
+		frame.setVisible(true);
+		frame.toFront();
+		frame.setVisible(false);
+		chooser.addComponentListener(new OpenListener(chooser));
+		chooser.setMultiSelectionEnabled(true);
+		final int option = chooser.showOpenDialog(frame);
+		if (option == JFileChooser.APPROVE_OPTION) {
+			final File[] sf = chooser.getSelectedFiles();
+			@SuppressWarnings("unused")
+			String filelist = "nothing";
+			if (sf.length > 0) {
+				filelist = sf[0].getName();
+			}
+			for (int i = 1; i < sf.length; i++) {
+				filelist += ", " + sf[i].getName();
+			}
+		}
 	}
 
-	/**
-	 * Devuelve el valor de la propiedad 'call'
-	 * @return Propiedad call
-	 */
-	public String getCall() {
-		return this.call;
-	}
-
-	/**
-	 * Asigna el valor de la propiedad 'call'
-	 * @param call valor que se le quiere dar a la propiedad 'call'
-	 */
-	public void setCall(final String call) {
-		this.call = call;
-	}
 }

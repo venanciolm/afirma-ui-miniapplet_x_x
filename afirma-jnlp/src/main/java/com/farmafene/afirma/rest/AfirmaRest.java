@@ -25,6 +25,7 @@ package com.farmafene.afirma.rest;
 
 import java.util.concurrent.Executor;
 
+import javax.swing.JButton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -32,7 +33,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.farmafene.afirma.Main;
+import com.farmafene.afirma.CloseWindowAdapter;
 import com.farmafene.afirma.dto.AddDataMessageRequest;
 import com.farmafene.afirma.dto.AddDataMessageResponse;
 import com.farmafene.afirma.dto.CmdMessageResponse;
@@ -60,13 +61,15 @@ import com.farmafene.afirma.dto.SetStickySignatoryMessageResponse;
 import com.farmafene.afirma.dto.SignMessageRequest;
 import com.farmafene.afirma.dto.SignMessageResponse;
 
-import es.gob.afirma.miniapplet.MiniAfirmaWrapper;
+import es.gob.afirma.miniapplet.MiniAfirmaApplet;
 
 @Path("/")
 public class AfirmaRest {
 
-	private MiniAfirmaWrapper wrapper;
+	private MiniAfirmaApplet wrapper;
 	private Executor executor;
+	private CloseWindowAdapter closeHandler;
+	private JButton openButton;
 
 	public AfirmaRest() {
 	}
@@ -77,6 +80,12 @@ public class AfirmaRest {
 	public CmdMessageResponse exit() {
 		final CmdMessageResponse m = new CmdMessageResponse();
 		m.setCall("exit");
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				AfirmaRest.this.closeHandler.forceClose();
+			}
+		});
 		return m;
 	}
 
@@ -98,7 +107,7 @@ public class AfirmaRest {
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				Main.item.doClick();
+				AfirmaRest.this.openButton.doClick();
 			}
 		});
 		return m;
@@ -416,22 +425,25 @@ public class AfirmaRest {
 
 	/**
 	 * Devuelve el valor de la propiedad 'wrapper'
+	 *
 	 * @return Propiedad wrapper
 	 */
-	public MiniAfirmaWrapper getWrapper() {
+	public MiniAfirmaApplet getWrapper() {
 		return this.wrapper;
 	}
 
 	/**
 	 * Asigna el valor de la propiedad 'wrapper'
+	 *
 	 * @param wrapper valor que se le quiere dar a la propiedad 'wrapper'
 	 */
-	public void setWrapper(final MiniAfirmaWrapper wrapper) {
+	public void setWrapper(final MiniAfirmaApplet wrapper) {
 		this.wrapper = wrapper;
 	}
 
 	/**
 	 * Devuelve el valor de la propiedad 'executor'
+	 *
 	 * @return Propiedad executor
 	 */
 	public Executor getExecutor() {
@@ -440,9 +452,31 @@ public class AfirmaRest {
 
 	/**
 	 * Asigna el valor de la propiedad 'executor'
+	 *
 	 * @param executor valor que se le quiere dar a la propiedad 'executor'
 	 */
 	public void setExecutor(final Executor executor) {
 		this.executor = executor;
+	}
+
+	public void setCloseHandler(final CloseWindowAdapter closeHandler) {
+		this.closeHandler = closeHandler;
+
+	}
+
+	/**
+	 * Devuelve el valor de la propiedad 'openButton'
+	 * @return Propiedad openButton
+	 */
+	public JButton getOpenButton() {
+		return this.openButton;
+	}
+
+	/**
+	 * Asigna el valor de la propiedad 'openButton'
+	 * @param openButton valor que se le quiere dar a la propiedad 'openButton'
+	 */
+	public void setOpenButton(final JButton openButton) {
+		this.openButton = openButton;
 	}
 }

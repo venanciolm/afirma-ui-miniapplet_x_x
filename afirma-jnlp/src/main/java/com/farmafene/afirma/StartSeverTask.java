@@ -21,12 +21,35 @@
  * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package es.gob.afirma.miniapplet;
+package com.farmafene.afirma;
 
-/**
- * 
- * For initial interface.
- */
-public interface MiniAfirmaWrapper extends es.gob.afirma.miniapplet.MiniAfirma {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.farmafene.afirma.rest.ServerCtrl;
+
+public class StartSeverTask implements Runnable {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(StartSeverTask.class);
+	private ServerCtrl serverCtrl;
+
+	public StartSeverTask(ServerCtrl serverCtrl) {
+		this.serverCtrl = serverCtrl;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @see java.lang.Runnable#run()
+	 */
+	@Override
+	public void run() {
+		logger.info("Procediendo a a levantar el Jetty");
+		try {
+			serverCtrl.done();
+		} catch (final Exception e) {
+			logger.error("Excepción en la creación del Servidor", e);
+		}
+	}
 }

@@ -23,51 +23,126 @@
  */
 package com.farmafene.afirma.rest;
 
+import java.net.URL;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
+import javax.swing.JButton;
+
+import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import es.gob.afirma.miniapplet.MiniAfirmaWrapper;
+import com.farmafene.afirma.CloseWindowAdapter;
+
+import es.gob.afirma.miniapplet.MiniAfirmaApplet;
 
 public class ServerCtrl {
 
-	private static final Logger logger = LoggerFactory.getLogger(ServerCtrl.class);
+	private static final int HTTPS_IDLE_TIMEOUT = 500000;
+	private static final int JETTY_OUTPUT_BUFFER_SIZE = 32768;
+	private static final String BIND_ADDRESS = "localhost";
+	private static final int JETTY_PORT = 9999;
+	private static final String HTTPS_SCHEME = "https";
+	private static final String AFIRMA_CTX = "/afirma";
+	private static final Logger logger = LoggerFactory
+			.getLogger(ServerCtrl.class);
 	private Server jettyServer = null;
 	private CountDownLatch serverLatch = new CountDownLatch(1);
 	private Executor executor;
-	private MiniAfirmaWrapper wrapper;
+	private MiniAfirmaApplet wrapper;
+	private JButton openButton;
+	private CloseWindowAdapter closeHandler;
 
+	/**
+	 * {@link http
+	 * ://www.eclipse.org/jetty/documentation/current/embedded-examples
+	 * .html#embedded-many-connectors}
+	 * 
+	 * @see http 
+	 *      ://www.eclipse.org/jetty/documentation/current/embedded-examples.
+	 *      html#embedded-many-connectors
+	 * @throws Exception
+	 */
 	public void done() throws Exception {
-		final ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-		context.setContextPath("/afirma");
+		final ServletContextHandler context = new ServletContextHandler(
+				ServletContextHandler.SESSIONS);
+		context.setContextPath(AFIRMA_CTX);
 
-		this.jettyServer = new Server(9999);
+		jettyServer = new Server();
+
+		SslContextFactory sslContextFactory = new SslContextFactory();
+		final URL keyStoreURL = Thread.currentThread().getContextClassLoader()
+				.getResource("jks/jetty.keystore.jks");
+		sslContextFactory.setKeyStorePath(keyStoreURL.toExternalForm());
+		sslContextFactory.setKeyStorePassword("changeit");
+		sslContextFactory.setKeyManagerPassword("changeit");
+
+		HttpConfiguration http_config = new HttpConfiguration();
+		http_config.setSecureScheme(HTTPS_SCHEME);
+		http_config.setSecurePort(getJettyPort());
+		http_config.setOutputBufferSize(JETTY_OUTPUT_BUFFER_SIZE);
+
+		HttpConfiguration https_config = new HttpConfiguration(http_config);
+		https_config.addCustomizer(new SecureRequestCustomizer());
+
+		ServerConnector https = new ServerConnector(this.jettyServer,
+				new SslConnectionFactory(sslContextFactory,
+						HttpVersion.HTTP_1_1.asString()),
+				new HttpConnectionFactory(https_config));
+		https.setPort(getJettyPort());
+		https.setIdleTimeout(HTTPS_IDLE_TIMEOUT);
+		https.setHost(BIND_ADDRESS);
+		this.jettyServer.setConnectors(new Connector[] { https });
 		this.jettyServer.setHandler(context);
 
 		final AfirmaRest request = new AfirmaRest();
 		request.setExecutor(this.executor);
 		request.setWrapper(this.wrapper);
-		final ServletHolder aFirmaServlet = new ServletHolder(new ServletContainer(new ResourceConfig().register(request)));
+		request.setCloseHandler(this.closeHandler);
+		request.setOpenButton(this.openButton);
+
+		CorsFilter cors = new CorsFilter();
+		ResourceConfig resourceConfig = new ResourceConfig().register(request)
+				.register(cors);
+		final ServletHolder aFirmaServlet = new ServletHolder(
+				new ServletContainer(resourceConfig));
 		aFirmaServlet.setInitOrder(0);
 		// todo lo del contexto /afirma, pertenece a este servlet ...
 		context.addServlet(aFirmaServlet, "/*");
 		this.jettyServer.start();
-		logger.info("El servidor es: {} '{}'", this.jettyServer.getURI(), this.jettyServer.getState());
+		logger.info("El servidor es: {} '{}'", this.jettyServer.getURI(),
+				this.jettyServer.getState());
 		this.serverLatch.await();
+		if (null != this.wrapper) {
+			logger.info("Destroy the Mini@firmaApplet");
+			this.wrapper.stop();
+		}
 		try {
 			context.stop();
 			this.jettyServer.stop();
+			((ExecutorService) this.executor).shutdown();
 			logger.info("El servidor estado: '{}'", this.jettyServer.getState());
 		} catch (final Exception e) {
 			logger.error("Excepción al destruir el servidor!", e);
 		}
+	}
+
+	private int getJettyPort() {
+		return JETTY_PORT;
 	}
 
 	/**
@@ -85,7 +160,8 @@ public class ServerCtrl {
 	}
 
 	/**
-	 * @param serverLatch the serverLatch to set
+	 * @param serverLatch
+	 *            the serverLatch to set
 	 */
 	public void setServerLatch(final CountDownLatch serverLatch) {
 		this.serverLatch = serverLatch;
@@ -93,6 +169,7 @@ public class ServerCtrl {
 
 	/**
 	 * Devuelve el valor de la propiedad 'executor'
+	 *
 	 * @return Propiedad executor
 	 */
 	public Executor getExecutor() {
@@ -101,7 +178,9 @@ public class ServerCtrl {
 
 	/**
 	 * Asigna el valor de la propiedad 'executor'
-	 * @param executor valor que se le quiere dar a la propiedad 'executor'
+	 *
+	 * @param executor
+	 *            valor que se le quiere dar a la propiedad 'executor'
 	 */
 	public void setExecutor(final Executor executor) {
 		this.executor = executor;
@@ -109,17 +188,43 @@ public class ServerCtrl {
 
 	/**
 	 * Devuelve el valor de la propiedad 'wrapper'
+	 *
 	 * @return Propiedad wrapper
 	 */
-	public MiniAfirmaWrapper getWrapper() {
+	public MiniAfirmaApplet getWrapper() {
 		return this.wrapper;
 	}
 
 	/**
 	 * Asigna el valor de la propiedad 'wrapper'
-	 * @param wrapper valor que se le quiere dar a la propiedad 'wrapper'
+	 *
+	 * @param wrapper
+	 *            valor que se le quiere dar a la propiedad 'wrapper'
 	 */
-	public void setWrapper(final MiniAfirmaWrapper wrapper) {
+	public void setWrapper(final MiniAfirmaApplet wrapper) {
 		this.wrapper = wrapper;
+	}
+
+	public void setCloseHander(final CloseWindowAdapter closeImpl) {
+		this.closeHandler = closeImpl;
+	}
+
+	/**
+	 * Devuelve el valor de la propiedad 'openButton'
+	 * 
+	 * @return Propiedad openButton
+	 */
+	public JButton getOpenButton() {
+		return this.openButton;
+	}
+
+	/**
+	 * Asigna el valor de la propiedad 'openButton'
+	 * 
+	 * @param openButton
+	 *            valor que se le quiere dar a la propiedad 'openButton'
+	 */
+	public void setOpenButton(final JButton openButton) {
+		this.openButton = openButton;
 	}
 }
