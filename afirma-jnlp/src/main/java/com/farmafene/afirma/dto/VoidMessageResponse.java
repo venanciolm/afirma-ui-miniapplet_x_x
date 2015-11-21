@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public abstract class VoidMessageResponse implements Serializable {
 	private int error;
 	private String descError;
-	private static final AtomicLong ID_GENERATOR = new AtomicLong();
+	private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
 	private String time;
 	private long id;
 

@@ -27,7 +27,6 @@ import java.util.concurrent.Executor;
 
 import javax.swing.JButton;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -74,7 +73,7 @@ public class AfirmaRest {
 	public AfirmaRest() {
 	}
 
-	@GET
+	@POST
 	@Path("exit")
 	@Produces(MediaType.APPLICATION_JSON)
 	public CmdMessageResponse exit() {
@@ -89,7 +88,7 @@ public class AfirmaRest {
 		return m;
 	}
 
-	@GET
+	@POST
 	@Path("test")
 	@Produces(MediaType.APPLICATION_JSON)
 	public CmdMessageResponse test() {
@@ -98,7 +97,7 @@ public class AfirmaRest {
 		return m;
 	}
 
-	@GET
+	@POST
 	@Path("open")
 	@Produces(MediaType.APPLICATION_JSON)
 	public CmdMessageResponse open() {
@@ -127,7 +126,8 @@ public class AfirmaRest {
 	public SignMessageResponse sign(final SignMessageRequest msg) {
 		final SignMessageResponse response = new SignMessageResponse();
 		try {
-			response.setMsg(this.wrapper.sign(msg.getAlgorithm(), msg.getFormat(), msg.getExtraParams()));
+			response.setMsg(this.wrapper.sign(msg.getAlgorithm(),
+					msg.getFormat(), msg.getExtraParams()));
 		} catch (final Exception e) {
 			response.setError(1);
 			response.setDescError(e);
@@ -145,7 +145,8 @@ public class AfirmaRest {
 	@Path("setStickySignatory")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public SetStickySignatoryMessageResponse setStickySignatory(final SetStickySignatoryMessageRequest request) {
+	public SetStickySignatoryMessageResponse setStickySignatory(
+			final SetStickySignatoryMessageRequest request) {
 		final SetStickySignatoryMessageResponse response = new SetStickySignatoryMessageResponse();
 		try {
 			this.wrapper.setStickySignatory(request.getSticky());
@@ -170,7 +171,9 @@ public class AfirmaRest {
 	public CoSignMessageResponse coSign(final CoSignMessageRequest request) {
 		final CoSignMessageResponse response = new CoSignMessageResponse();
 		try {
-			response.setMsg(this.wrapper.coSign(request.getData(), request.getAlgorithm(), request.getFormat(), request.getExtraParams()));
+			response.setMsg(this.wrapper.coSign(request.getData(),
+					request.getAlgorithm(), request.getFormat(),
+					request.getExtraParams()));
 		} catch (final Exception e) {
 			response.setError(1);
 			response.setDescError(e);
@@ -189,10 +192,12 @@ public class AfirmaRest {
 	@Path("counterSign")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public CounterSignMessageResponse counterSign(final CounterSignMessageRequest request) {
+	public CounterSignMessageResponse counterSign(
+			final CounterSignMessageRequest request) {
 		final CounterSignMessageResponse response = new CounterSignMessageResponse();
 		try {
-			response.setMsg(this.wrapper.counterSign(request.getAlgorithm(), request.getFormat(), request.getExtraParams()));
+			response.setMsg(this.wrapper.counterSign(request.getAlgorithm(),
+					request.getFormat(), request.getExtraParams()));
 		} catch (final Exception e) {
 			response.setError(1);
 			response.setDescError(e);
@@ -210,11 +215,13 @@ public class AfirmaRest {
 	@Path("getFileNameContentBase64")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public GetFileNameContentBase64MessageResponse getFileNameContentBase64(final GetFileNameContentBase64MessageRequest request) {
+	public GetFileNameContentBase64MessageResponse getFileNameContentBase64(
+			final GetFileNameContentBase64MessageRequest request) {
 		final GetFileNameContentBase64MessageResponse response = new GetFileNameContentBase64MessageResponse();
 		try {
-			response.setMsg(this.wrapper.getFileNameContentBase64(request.getTitle(), request.getExtensions(), request.getDescription(),
-					request.getFilePath()));
+			response.setMsg(this.wrapper.getFileNameContentBase64(
+					request.getTitle(), request.getExtensions(),
+					request.getDescription(), request.getFilePath()));
 		} catch (final Exception e) {
 			response.setError(1);
 			response.setDescError(e);
@@ -233,11 +240,13 @@ public class AfirmaRest {
 	@Path("getMultiFileNameContentBase64")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public GetMultiFileNameContentBase64MessageResponse getMultiFileNameContentBase64(final GetMultiFileNameContentBase64MessageRequest request) {
+	public GetMultiFileNameContentBase64MessageResponse getMultiFileNameContentBase64(
+			final GetMultiFileNameContentBase64MessageRequest request) {
 		final GetMultiFileNameContentBase64MessageResponse response = new GetMultiFileNameContentBase64MessageResponse();
 		try {
-			response.setMsgs(this.wrapper.getMultiFileNameContentBase64(request.getTitle(), request.getExtensions(), request.getDescription(),
-					request.getFilePath()));
+			response.setMsgs(this.wrapper.getMultiFileNameContentBase64(
+					request.getTitle(), request.getExtensions(),
+					request.getDescription(), request.getFilePath()));
 		} catch (final Exception e) {
 			response.setError(1);
 			response.setDescError(e);
@@ -255,10 +264,13 @@ public class AfirmaRest {
 	@Path("saveDataToFile")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public SaveDataToFileMessageResponse saveDataToFile(final SaveDataToFileMessageRequest request) {
+	public SaveDataToFileMessageResponse saveDataToFile(
+			final SaveDataToFileMessageRequest request) {
 		final SaveDataToFileMessageResponse response = new SaveDataToFileMessageResponse();
 		try {
-			response.setMsg(this.wrapper.saveDataToFile(request.getTitle(), request.getFileName(), request.getExtension(), request.getDescription()));
+			response.setMsg(this.wrapper.saveDataToFile(request.getTitle(),
+					request.getFileName(), request.getExtension(),
+					request.getDescription()));
 		} catch (final Exception e) {
 			response.setError(1);
 			response.setDescError(e);
@@ -277,10 +289,12 @@ public class AfirmaRest {
 	@Path("getTextFromBase64")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public GetTextFromBase64MessageResponse getTextFromBase64(final GetTextFromBase64MessageRequest request) {
+	public GetTextFromBase64MessageResponse getTextFromBase64(
+			final GetTextFromBase64MessageRequest request) {
 		final GetTextFromBase64MessageResponse response = new GetTextFromBase64MessageResponse();
 		try {
-			response.setMsg(this.wrapper.getTextFromBase64(request.getData(), request.getCharset()));
+			response.setMsg(this.wrapper.getTextFromBase64(request.getData(),
+					request.getCharset()));
 		} catch (final Exception e) {
 			response.setError(1);
 			response.setDescError(e);
@@ -299,10 +313,12 @@ public class AfirmaRest {
 	@Path("getBase64FromText")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public GetBase64FromTextMessageResponse getBase64FromText(final GetBase64FromTextMessageRequest request) {
+	public GetBase64FromTextMessageResponse getBase64FromText(
+			final GetBase64FromTextMessageRequest request) {
 		final GetBase64FromTextMessageResponse response = new GetBase64FromTextMessageResponse();
 		try {
-			response.setMsg(this.wrapper.getBase64FromText(request.getPlainText(), request.getCharset()));
+			response.setMsg(this.wrapper.getBase64FromText(
+					request.getPlainText(), request.getCharset()));
 		} catch (final Exception e) {
 			response.setError(1);
 			response.setDescError(e);
@@ -314,7 +330,7 @@ public class AfirmaRest {
 	 * @return
 	 * @see es.gob.afirma.miniapplet.MiniAfirma#getErrorMessage()
 	 */
-	@GET
+	@POST
 	@Path("getErrorMessage")
 	@Produces(MediaType.APPLICATION_JSON)
 	public GetErrorMessageMessageResponse getErrorMessage() {
@@ -332,7 +348,7 @@ public class AfirmaRest {
 	 * @return
 	 * @see es.gob.afirma.miniapplet.MiniAfirma#getErrorType()
 	 */
-	@GET
+	@POST
 	@Path("getErrorType")
 	@Produces(MediaType.APPLICATION_JSON)
 	public GetErrorTypeMessageResponse getErrorType() {
@@ -350,7 +366,7 @@ public class AfirmaRest {
 	 * @return
 	 * @see es.gob.afirma.miniapplet.MiniAfirma#echo()
 	 */
-	@GET
+	@POST
 	@Path("echo")
 	@Produces(MediaType.APPLICATION_JSON)
 	public EchoMessageResponse echo() {
@@ -369,7 +385,7 @@ public class AfirmaRest {
 	 * @return
 	 * @see es.gob.afirma.miniapplet.MiniAfirma#getRemainingData()
 	 */
-	@GET
+	@POST
 	@Path("getRemainingData")
 	@Produces(MediaType.APPLICATION_JSON)
 	public GetRemainingDataMessageResponse getRemainingData() {
@@ -409,7 +425,7 @@ public class AfirmaRest {
 	 * @return
 	 * @see es.gob.afirma.miniapplet.MiniAfirma#getCurrentLog()
 	 */
-	@GET
+	@POST
 	@Path("getCurrentLog")
 	@Produces(MediaType.APPLICATION_JSON)
 	public GetCurrentLogMessageResponse getCurrentLog() {
@@ -435,7 +451,8 @@ public class AfirmaRest {
 	/**
 	 * Asigna el valor de la propiedad 'wrapper'
 	 *
-	 * @param wrapper valor que se le quiere dar a la propiedad 'wrapper'
+	 * @param wrapper
+	 *            valor que se le quiere dar a la propiedad 'wrapper'
 	 */
 	public void setWrapper(final MiniAfirmaApplet wrapper) {
 		this.wrapper = wrapper;
@@ -453,7 +470,8 @@ public class AfirmaRest {
 	/**
 	 * Asigna el valor de la propiedad 'executor'
 	 *
-	 * @param executor valor que se le quiere dar a la propiedad 'executor'
+	 * @param executor
+	 *            valor que se le quiere dar a la propiedad 'executor'
 	 */
 	public void setExecutor(final Executor executor) {
 		this.executor = executor;
@@ -466,6 +484,7 @@ public class AfirmaRest {
 
 	/**
 	 * Devuelve el valor de la propiedad 'openButton'
+	 * 
 	 * @return Propiedad openButton
 	 */
 	public JButton getOpenButton() {
@@ -474,7 +493,9 @@ public class AfirmaRest {
 
 	/**
 	 * Asigna el valor de la propiedad 'openButton'
-	 * @param openButton valor que se le quiere dar a la propiedad 'openButton'
+	 * 
+	 * @param openButton
+	 *            valor que se le quiere dar a la propiedad 'openButton'
 	 */
 	public void setOpenButton(final JButton openButton) {
 		this.openButton = openButton;

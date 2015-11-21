@@ -10,7 +10,7 @@ if (document.all && !window.setTimeout.isPolyfill) {
 	window.setTimeout.isPolyfill = true;
 }
 
-var MiniApplet = ( function ( window, undefined ) {
+var MiniAppletStandard = ( function ( window, undefined ) {
 
 		var VERSION = "1.3";
 		
@@ -1426,6 +1426,15 @@ var MiniApplet = ( function ( window, undefined ) {
 			getCurrentLog : getCurrentLog
 		};
 })(window, undefined);
+
+var MiniApplet = ( function ( window, undefined ) {
+	var aux = return MiniAppletStandard( window, undefined );
+	if(!aux) {
+		// TODO
+		alert("Error!");
+	}
+	return aux;
+});
 
 
 

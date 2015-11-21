@@ -30,16 +30,31 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MultivaluedMap;
 
+/**
+ * Implementa un CORS para llamadas ajax
+ * 
+ * @author vlopez@farmafene.com
+ */
 class CorsFilter implements ContainerResponseFilter {
 
 	public CorsFilter() {
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @see javax.ws.rs.container.ContainerResponseFilter#filter(javax.ws.rs.container.ContainerRequestContext,
+	 *      javax.ws.rs.container.ContainerResponseContext)
+	 */
 	public void filter(ContainerRequestContext requestContext,
 			ContainerResponseContext responseContext) throws IOException {
 		MultivaluedMap<String, Object> headers = responseContext.getHeaders();
 		headers.add("Access-Control-Allow-Origin", "*");
-		headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
+		headers.add("Access-Control-Allow-Headers",
+				"origin, content-type, accept, authorization");
+		headers.add("Access-Control-Allow-Methods",
+				"GET, POST, PUT, DELETE, OPTIONS, HEAD");
+		headers.add("Access-Control-Allow-Credentials", "true");
 	}
 }
