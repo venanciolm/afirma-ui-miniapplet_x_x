@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+<title>Sample Page</title>
+<link rel="shortcut icon" type="image/png" href="/favicon.ico" />
+<script type="text/javascript" src="jquery-1.11.3.min.js"></script>
+<script type="text/javascript" src="afirma-jnlp.js"></script>
+<script type="text/javascript">
+MiniApplet = MiniAppletJNLP;
+	var successCallback = function(/*Anything*/response, /*String*/textStatus, /*jqXHR*/
+			jqXHR) {
+				var value = "id: " + response.id;
+				value += "\n" + "type: " + response.type;
+				value += "\n" + "time: " + response.time;
+				value += "\n" + "error: " + response.error;
+				value += "\n" + "descError: " + response.descError;
+				value += "\n";
+				value += "\n" + "textStatus: " + textStatus;
+				$("#console").val(value);
+			};
+	var errorCallback = function(/*jqXHR*/jqXHR,/*String*/textStatus,/*String*/
+	errorThrown) {
+		$("#console").val(errorThrown);
+	};
+	MiniApplet.setCompleteCallback(function( /*jqXHR*/jqXHR, /*String*/
+			textStatus) {
+		$("#resultado").html(textStatus);
+	});
+
+	MiniApplet.setBeforeSendCallback(function(/*jqXHR*/jqXHR, /*PlainObject*/
+			settings) {
+		$("#resultado").html("Procesando, espere por favor...");
+	});
+
+	function showLogCallback(errorType, errorMessage) {
+		showLog("Type: " + errorType + "\nMessage: " + errorMessage);
+	}
+
+	function doSign() {
+		alert('voy a firmar');
+
+		try {
+			var text = $("#inputText");
+			var dataB64 = MiniApplet.getBase64FromText(text, "default");
+			//XAdES Enveloping -> el elemento que se firma est� contenido en la firma (Se genera un xml de firma en el que uno de sus nodos es el propio elemento)
+			//XAdES Enveloped  -> el elemento que se firma contiene al propio nodo de firma (Al documento que se firma se le a�ade un nodo con la firma)
+			//XAdES Detached -> el elemento que se firma es un recurso externo que estar� referenciado por una URI externa (del tipo file:/...) (Parece que lo mete todo junto...)
+			MiniApplet.sign(dataB64, 'SHA512withRSA', 'XAdES',
+					'format=XAdES Enveloping', saveSignatureCallback,
+					showLogCallback);
+		} catch (e) {
+			try {
+				showLog("Type: " + MiniApplet.getErrorType() + "\nMessage: "
+						+ MiniApplet.getErrorMessage());
+			} catch (ex) {
+				showLog("Error: " + e);
+			}
+		}
+
+	}
+	function echo() {
+		MiniApplet.echo(function(/*Anything*/response, /*String*/textStatus, /*jqXHR*/
+				jqXHR) {
+			successCallback(response,textStatus,jqXHR);
+			$("#outputText").val(response.msg);
+		},errorCallback);
+	}
+	function openWindow() {
+		MiniApplet.openWindow(successCallback,errorCallback);
+	}
+	function exit_jnlp() {
+		MiniApplet.exit(successCallback,errorCallback);
+	}
+	function test() {
+		MiniApplet.test(successCallback,errorCallback);
+	}
+	function getBase64FromText() {
+		var item = {
+				plainText : $("#inputText").val(),
+				charset : "default"
+			};
+		console.log("Enviando: " + item.plainText);
+		MiniApplet.getBase64FromText(item,function(/*Anything*/response, /*String*/textStatus, /*jqXHR*/
+				jqXHR) {
+			successCallback(response,textStatus,jqXHR);
+			$("#outputText").val(response.msg);
+		},errorCallback);
+	}
+	
+	function sign() {
+		var itemValue;
+		var item = {
+			plainText : $("#inputText").val(),
+			charset : "default"
+		};
+		console.log("Enviando: " + item.plainText);
+		var result = callServer("getBase64FromText", item, function(response) {
+			$("#outputText").val(response.msg);
+			itemValue = response.msg;
+			doSign(itemValue);
+		});
+	}
+	function doSign(base64) {
+		var item = {
+			algorithm : 'SHA512withRSA',
+			format : 'XAdES',
+			extraParams : 'format=XAdES Enveloping'
+		};
+	}
+</script
+</head>
+<input type="button" value="echo" onClick="echo();" />&nbsp;
+<input type="button" value="test" onClick="test();" />&nbsp;
+<input type="button" value="open" onClick="openWindow();" />&nbsp;
+<input type="button" value="b64" onClick="getBase64FromText()" />&nbsp;
+<input type="button" value="Firmar" />&nbsp;&nbsp;&nbsp;
+<input type="button" value="exit" onClick="exit_jnlp();">&nbsp;
+
+<br />
+<div id="resultado"></div>
+
+<div>
+	<span>Consola</span> <br> <textarea id="console" cols="150"
+			rows="10">
+		 </textarea>
+</div>
+<div>
+	<span>Texto que se va a firmar</span> <br> <textarea
+			id="inputText" cols="150" rows="10"></textarea>
+</div>
+<br>
+
+	<div>
+		<span>Texto firmado en base64</span> <br />
+		<textarea id="outputText" cols="150" rows="10"></textarea>
+	</div> <br />
+</body>
+</html>
+
