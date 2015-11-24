@@ -1,5 +1,5 @@
-//success : function(/*Anything*/response, /*String*/textStatus, /*jqXHR*/
-//error : function(/*jqXHR*/jqXHR,/*String*/textStatus,/*String*/
+//success : function(/*Anything*/response, /*String*/textStatus, /*jqXHR*/jqXHR)
+//error : function(/*jqXHR*/jqXHR,/*String*/textStatus,/*String*/errorThrown)
 //beforeSend : function(/*jqXHR*/jqXHR, /*PlainObject*/settings) {
 //complete : function( /*jqXHR*/jqXHR, /*String*/textStatus) {
 
@@ -18,6 +18,9 @@ var MiniAppletJNLP = (function(window, undefined) {
 	}
 	function getBase64FromText(/**/ msg,sucessCallback,errorCallback) {
 		callServer("getBase64FromText", msg,sucessCallback,errorCallback);
+	}
+	function sign(/**/ msg,sucessCallback,errorCallback) {
+		callServer("sign", msg,sucessCallback,errorCallback);
 	}
 	
 	function openWindow(sucessCallback,errorCallback) {
@@ -104,7 +107,7 @@ var MiniAppletJNLP = (function(window, undefined) {
 	// cargarAppAfirma : cargarAppAfirma,
 	echo : echo,
 	// checkTime : checkTime,
-	// sign : sign,
+	sign : sign,
 	// coSign : coSign,
 	// counterSign : counterSign,
 	// saveDataToFile : saveDataToFile,

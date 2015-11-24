@@ -36,28 +36,6 @@ MiniApplet = MiniAppletJNLP;
 		showLog("Type: " + errorType + "\nMessage: " + errorMessage);
 	}
 
-	function doSign() {
-		alert('voy a firmar');
-
-		try {
-			var text = $("#inputText");
-			var dataB64 = MiniApplet.getBase64FromText(text, "default");
-			//XAdES Enveloping -> el elemento que se firma est� contenido en la firma (Se genera un xml de firma en el que uno de sus nodos es el propio elemento)
-			//XAdES Enveloped  -> el elemento que se firma contiene al propio nodo de firma (Al documento que se firma se le a�ade un nodo con la firma)
-			//XAdES Detached -> el elemento que se firma es un recurso externo que estar� referenciado por una URI externa (del tipo file:/...) (Parece que lo mete todo junto...)
-			MiniApplet.sign(dataB64, 'SHA512withRSA', 'XAdES',
-					'format=XAdES Enveloping', saveSignatureCallback,
-					showLogCallback);
-		} catch (e) {
-			try {
-				showLog("Type: " + MiniApplet.getErrorType() + "\nMessage: "
-						+ MiniApplet.getErrorMessage());
-			} catch (ex) {
-				showLog("Error: " + e);
-			}
-		}
-
-	}
 	function echo() {
 		MiniApplet.echo(function(/*Anything*/response, /*String*/textStatus, /*jqXHR*/
 				jqXHR) {
@@ -74,6 +52,7 @@ MiniApplet = MiniAppletJNLP;
 	function test() {
 		MiniApplet.test(successCallback,errorCallback);
 	}
+
 	function getBase64FromText() {
 		var item = {
 				plainText : $("#inputText").val(),
@@ -87,33 +66,25 @@ MiniApplet = MiniAppletJNLP;
 		},errorCallback);
 	}
 	
-	function sign() {
-		var itemValue;
-		var item = {
-			plainText : $("#inputText").val(),
-			charset : "default"
-		};
-		console.log("Enviando: " + item.plainText);
-		var result = callServer("getBase64FromText", item, function(response) {
-			$("#outputText").val(response.msg);
-			itemValue = response.msg;
-			doSign(itemValue);
-		});
-	}
-	function doSign(base64) {
+	function sign(base64) {
 		var item = {
 			algorithm : 'SHA512withRSA',
 			format : 'XAdES',
 			extraParams : 'format=XAdES Enveloping'
 		};
+		MiniApplet.sign(item,function(/*Anything*/response, /*String*/textStatus, /*jqXHR*/
+				jqXHR) {
+			successCallback(response,textStatus,jqXHR);
+			$("#outputText").val(response.msg);
+		},errorCallback);
 	}
 </script
 </head>
 <input type="button" value="echo" onClick="echo();" />&nbsp;
 <input type="button" value="test" onClick="test();" />&nbsp;
 <input type="button" value="open" onClick="openWindow();" />&nbsp;
-<input type="button" value="b64" onClick="getBase64FromText()" />&nbsp;
-<input type="button" value="Firmar" />&nbsp;&nbsp;&nbsp;
+<input type="button" value="b64" onClick="getBase64FromText();" />&nbsp;
+<input type="button" value="Firmar" onClick="sign();"/>&nbsp;&nbsp;&nbsp;
 <input type="button" value="exit" onClick="exit_jnlp();">&nbsp;
 
 <br />
