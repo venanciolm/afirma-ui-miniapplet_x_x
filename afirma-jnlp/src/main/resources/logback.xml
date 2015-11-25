@@ -29,7 +29,7 @@
 	<logger name="com.farmafene.afirma" level="DEBUG" additivity="false">
 		<appender-ref ref="STDOUT" />
 	</logger>
-	<root level="WARN" additivity="false">
+	<root level="INFO" additivity="false">
 		<appender-ref ref="STDOUT" />
 	</root>
 </configuration>

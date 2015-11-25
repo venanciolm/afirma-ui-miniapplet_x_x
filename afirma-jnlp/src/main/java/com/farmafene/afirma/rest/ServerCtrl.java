@@ -46,6 +46,11 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
+import ch.qos.logback.core.util.StatusPrinter;
+
 import com.farmafene.afirma.CloseWindowAdapter;
 
 import es.gob.afirma.miniapplet.MiniAfirmaApplet;
@@ -58,8 +63,7 @@ public class ServerCtrl {
 	private static final int JETTY_PORT = 9999;
 	private static final String HTTPS_SCHEME = "https";
 	private static final String AFIRMA_CTX = "/afirma";
-	private static final Logger logger = LoggerFactory
-			.getLogger(ServerCtrl.class);
+	private static final Logger logger = LoggerFactory.getLogger(ServerCtrl.class);
 	private Server jettyServer = null;
 	private CountDownLatch serverLatch = new CountDownLatch(1);
 	private Executor executor;
@@ -71,38 +75,34 @@ public class ServerCtrl {
 	 * {@link http
 	 * ://www.eclipse.org/jetty/documentation/current/embedded-examples
 	 * .html#embedded-many-connectors}
-	 * 
+	 *
 	 * @see http 
 	 *      ://www.eclipse.org/jetty/documentation/current/embedded-examples.
 	 *      html#embedded-many-connectors
 	 * @throws Exception
 	 */
 	public void done() throws Exception {
-		final ServletContextHandler context = new ServletContextHandler(
-				ServletContextHandler.SESSIONS);
+		final ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		context.setContextPath(AFIRMA_CTX);
 
-		jettyServer = new Server();
+		this.jettyServer = new Server();
 
-		SslContextFactory sslContextFactory = new SslContextFactory();
-		final URL keyStoreURL = Thread.currentThread().getContextClassLoader()
-				.getResource("jks/jetty.keystore.jks");
+		final SslContextFactory sslContextFactory = new SslContextFactory();
+		final URL keyStoreURL = Thread.currentThread().getContextClassLoader().getResource("jks/jetty.keystore.jks");
 		sslContextFactory.setKeyStorePath(keyStoreURL.toExternalForm());
 		sslContextFactory.setKeyStorePassword("changeit");
 		sslContextFactory.setKeyManagerPassword("changeit");
 
-		HttpConfiguration http_config = new HttpConfiguration();
+		final HttpConfiguration http_config = new HttpConfiguration();
 		http_config.setSecureScheme(HTTPS_SCHEME);
 		http_config.setSecurePort(getJettyPort());
 		http_config.setOutputBufferSize(JETTY_OUTPUT_BUFFER_SIZE);
 
-		HttpConfiguration https_config = new HttpConfiguration(http_config);
+		final HttpConfiguration https_config = new HttpConfiguration(http_config);
 		https_config.addCustomizer(new SecureRequestCustomizer());
 
-		ServerConnector https = new ServerConnector(this.jettyServer,
-				new SslConnectionFactory(sslContextFactory,
-						HttpVersion.HTTP_1_1.asString()),
-				new HttpConnectionFactory(https_config));
+		final ServerConnector https = new ServerConnector(this.jettyServer, new SslConnectionFactory(sslContextFactory,
+				HttpVersion.HTTP_1_1.asString()), new HttpConnectionFactory(https_config));
 		https.setPort(getJettyPort());
 		https.setIdleTimeout(HTTPS_IDLE_TIMEOUT);
 		https.setHost(BIND_ADDRESS);
@@ -115,17 +115,29 @@ public class ServerCtrl {
 		request.setCloseHandler(this.closeHandler);
 		request.setOpenButton(this.openButton);
 
-		CorsFilter cors = new CorsFilter();
-		ResourceConfig resourceConfig = new ResourceConfig().register(request)
-				.register(cors);
-		final ServletHolder aFirmaServlet = new ServletHolder(
-				new ServletContainer(resourceConfig));
+		final CorsFilter cors = new CorsFilter();
+		final ResourceConfig resourceConfig = new ResourceConfig().register(request).register(cors);
+		final ServletHolder aFirmaServlet = new ServletHolder(new ServletContainer(resourceConfig));
 		aFirmaServlet.setInitOrder(0);
 		// todo lo del contexto /afirma, pertenece a este servlet ...
 		context.addServlet(aFirmaServlet, "/*");
 		this.jettyServer.start();
-		logger.info("El servidor es: {} '{}'", this.jettyServer.getURI(),
-				this.jettyServer.getState());
+		logger.info("El servidor es: {} '{}'", this.jettyServer.getURI(), this.jettyServer.getState());
+		final LoggerContext lContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+		try {
+			final JoranConfigurator configurator = new JoranConfigurator();
+			configurator.setContext(lContext);
+			// Call context.reset() to clear any previous configuration, e.g.
+			// default
+			// configuration. For multi-step configuration, omit calling
+			// context.reset().
+			lContext.reset();
+			configurator.doConfigure(Thread.currentThread().getContextClassLoader().getResourceAsStream("logback.xml"));
+		} catch (final JoranException je) {
+			// StatusPrinter will handle this
+		}
+		StatusPrinter.printInCaseOfErrorsOrWarnings(lContext);
 		this.serverLatch.await();
 		if (null != this.wrapper) {
 			logger.info("Destroy the Mini@firmaApplet");
@@ -160,8 +172,7 @@ public class ServerCtrl {
 	}
 
 	/**
-	 * @param serverLatch
-	 *            the serverLatch to set
+	 * @param serverLatch the serverLatch to set
 	 */
 	public void setServerLatch(final CountDownLatch serverLatch) {
 		this.serverLatch = serverLatch;
@@ -179,8 +190,7 @@ public class ServerCtrl {
 	/**
 	 * Asigna el valor de la propiedad 'executor'
 	 *
-	 * @param executor
-	 *            valor que se le quiere dar a la propiedad 'executor'
+	 * @param executor valor que se le quiere dar a la propiedad 'executor'
 	 */
 	public void setExecutor(final Executor executor) {
 		this.executor = executor;
@@ -198,8 +208,7 @@ public class ServerCtrl {
 	/**
 	 * Asigna el valor de la propiedad 'wrapper'
 	 *
-	 * @param wrapper
-	 *            valor que se le quiere dar a la propiedad 'wrapper'
+	 * @param wrapper valor que se le quiere dar a la propiedad 'wrapper'
 	 */
 	public void setWrapper(final MiniAfirmaApplet wrapper) {
 		this.wrapper = wrapper;
@@ -211,7 +220,7 @@ public class ServerCtrl {
 
 	/**
 	 * Devuelve el valor de la propiedad 'openButton'
-	 * 
+	 *
 	 * @return Propiedad openButton
 	 */
 	public JButton getOpenButton() {
@@ -220,9 +229,8 @@ public class ServerCtrl {
 
 	/**
 	 * Asigna el valor de la propiedad 'openButton'
-	 * 
-	 * @param openButton
-	 *            valor que se le quiere dar a la propiedad 'openButton'
+	 *
+	 * @param openButton valor que se le quiere dar a la propiedad 'openButton'
 	 */
 	public void setOpenButton(final JButton openButton) {
 		this.openButton = openButton;
