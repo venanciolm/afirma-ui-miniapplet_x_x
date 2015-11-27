@@ -2,34 +2,38 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
 <title>Sample Page</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge;chrome=1" />
 <link rel="shortcut icon" type="image/png" href="/favicon.ico" />
 <script type="text/javascript" src="jquery-1.11.3.min.js"></script>
 <script type="text/javascript" src="afirma-jnlp.js"></script>
 <script type="text/javascript">
-MiniApplet = MiniAppletJNLP;
-	var successCallback = function(/*Anything*/response, /*String*/textStatus, /*jqXHR*/
-			jqXHR) {
-				var value = "id: " + response.id;
-				value += "\n" + "type: " + response.type;
-				value += "\n" + "time: " + response.time;
-				value += "\n" + "error: " + response.error;
-				value += "\n" + "descError: " + response.descError;
-				value += "\n";
-				value += "\n" + "textStatus: " + textStatus;
-				$("#console").val(value);
-			};
+	MiniApplet = MiniAppletJNLP;
+	var successCallback = function(/*Anything*/response, /*String*/
+	textStatus, /*jqXHR*/
+	jqXHR) {
+		var value = "id: " + response.id;
+		value += "\n" + "type: " + response.type;
+		value += "\n" + "time: " + response.time;
+		value += "\n" + "error: " + response.error;
+		value += "\n" + "descError: " + response.descError;
+		value += "\n";
+		value += "\n" + "textStatus: " + textStatus;
+		$("#console").val(value);
+	};
 	var errorCallback = function(/*jqXHR*/jqXHR,/*String*/textStatus,/*String*/
 	errorThrown) {
 		$("#console").val(errorThrown);
 	};
 	MiniApplet.setCompleteCallback(function( /*jqXHR*/jqXHR, /*String*/
-			textStatus) {
+	textStatus) {
 		$("#resultado").html(textStatus);
+		$('#preloader').hide();
 	});
 
 	MiniApplet.setBeforeSendCallback(function(/*jqXHR*/jqXHR, /*PlainObject*/
-			settings) {
+	settings) {
 		$("#resultado").html("Procesando, espere por favor...");
+		$('#preloader').show();
 	});
 
 	function showLogCallback(errorType, errorMessage) {
@@ -38,73 +42,103 @@ MiniApplet = MiniAppletJNLP;
 
 	function echo() {
 		MiniApplet.echo(function(/*Anything*/response, /*String*/textStatus, /*jqXHR*/
-				jqXHR) {
-			successCallback(response,textStatus,jqXHR);
+		jqXHR) {
+			successCallback(response, textStatus, jqXHR);
 			$("#outputText").val(response.msg);
-		},errorCallback);
+		}, errorCallback);
 	}
 	function openWindow() {
-		MiniApplet.openWindow(successCallback,errorCallback);
+		MiniApplet.openWindow(successCallback, errorCallback);
 	}
 	function exit_jnlp() {
-		MiniApplet.exit(successCallback,errorCallback);
+		MiniApplet.exit(successCallback, errorCallback);
 	}
 	function test() {
-		MiniApplet.test(successCallback,errorCallback);
+		MiniApplet.test(successCallback, errorCallback);
 	}
 
 	function getBase64FromText() {
 		var item = {
-				plainText : $("#inputText").val(),
-				charset : "default"
-			};
+			plainText : $("#inputText").val(),
+			charset : "default"
+		};
 		console.log("Enviando: " + item.plainText);
-		MiniApplet.getBase64FromText(item,function(/*Anything*/response, /*String*/textStatus, /*jqXHR*/
-				jqXHR) {
-			successCallback(response,textStatus,jqXHR);
+		MiniApplet.getBase64FromText(item, function(/*Anything*/response, /*String*/
+		textStatus, /*jqXHR*/
+		jqXHR) {
+			successCallback(response, textStatus, jqXHR);
 			$("#outputText").val(response.msg);
-		},errorCallback);
+		}, errorCallback);
 	}
-	
+
 	function sign(base64) {
 		var item = {
 			algorithm : 'SHA512withRSA',
 			format : 'XAdES',
 			extraParams : 'format=XAdES Enveloping'
 		};
-		MiniApplet.sign(item,function(/*Anything*/response, /*String*/textStatus, /*jqXHR*/
-				jqXHR) {
-			successCallback(response,textStatus,jqXHR);
+		MiniApplet.sign(item, function(/*Anything*/response, /*String*/
+		textStatus, /*jqXHR*/
+		jqXHR) {
+			successCallback(response, textStatus, jqXHR);
 			$("#outputText").val(response.msg);
-		},errorCallback);
+		}, errorCallback);
 	}
-</script
+</script>
+<style>
+#preloader {
+	display: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(53, 147, 1, 0.7);
+	z-index: 99;
+	height: 100%;
+}
+
+#status {
+	width: 200px;
+	height: 200px;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	background-image: url(ajax-loader.gif);
+	background-repeat: no-repeat;
+	background-position: center;
+	margin: -100px 0 0 -100px;
+}
+</style>
 </head>
-<input type="button" value="echo" onClick="echo();" />&nbsp;
-<input type="button" value="test" onClick="test();" />&nbsp;
-<input type="button" value="open" onClick="openWindow();" />&nbsp;
-<input type="button" value="b64" onClick="getBase64FromText();" />&nbsp;
-<input type="button" value="Firmar" onClick="sign();"/>&nbsp;&nbsp;&nbsp;
-<input type="button" value="exit" onClick="exit_jnlp();">&nbsp;
+<body>
+	<input type="button" value="echo" onClick="echo();" />&nbsp;
+	<input type="button" value="test" onClick="test();" />&nbsp;
+	<input type="button" value="open" onClick="openWindow();" />&nbsp;
+	<input type="button" value="b64" onClick="getBase64FromText();" />&nbsp;
+	<input type="button" value="Firmar" onClick="sign();" />&nbsp;&nbsp;&nbsp;
+	<input type="button" value="exit" onClick="exit_jnlp();">&nbsp;
 
-<br />
-<div id="resultado"></div>
+		<br />
+		<div id="resultado"></div>
 
-<div>
-	<span>Consola</span> <br> <textarea id="console" cols="150"
-			rows="10">
+		<div>
+			<span>Consola</span> <br> <textarea id="console" cols="150"
+					rows="10">
 		 </textarea>
-</div>
-<div>
-	<span>Texto que se va a firmar</span> <br> <textarea
-			id="inputText" cols="150" rows="10"></textarea>
-</div>
-<br>
+		</div>
+		<div>
+			<span>Texto que se va a firmar</span> <br> <textarea
+					id="inputText" cols="150" rows="10"></textarea>
+		</div> <br>
 
-	<div>
-		<span>Texto firmado en base64</span> <br />
-		<textarea id="outputText" cols="150" rows="10"></textarea>
-	</div> <br />
+			<div>
+				<span>Texto firmado en base64</span> <br />
+				<textarea id="outputText" cols="150" rows="10"></textarea>
+			</div> <br />
+	<div id="preloader">
+		<div id="status">&nbsp;</div>
+	</div>
 </body>
 </html>
 

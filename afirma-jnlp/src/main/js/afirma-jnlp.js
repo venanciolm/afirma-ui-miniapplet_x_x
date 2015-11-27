@@ -1,8 +1,9 @@
-//success : function(/*Anything*/response, /*String*/textStatus, /*jqXHR*/jqXHR)
-//error : function(/*jqXHR*/jqXHR,/*String*/textStatus,/*String*/errorThrown)
-//beforeSend : function(/*jqXHR*/jqXHR, /*PlainObject*/settings) {
-//complete : function( /*jqXHR*/jqXHR, /*String*/textStatus) {
-
+/*
+//success : function( Anything response,String textStatus, jqXHR jqXHR)
+//error : function(jqXHR jqXHR,String textStatus, String errorThrown)
+//beforeSend : function(jqXHR jqXHR, PlainObject settings) {
+//complete : function(jqXHR jqXHR,String textStatus) {
+*/
 var MiniAppletJNLP = (function(window, undefined) {
 	var completeCallback;
 	var beforeSendCallback;
@@ -35,14 +36,16 @@ var MiniAppletJNLP = (function(window, undefined) {
 	function callServer(/* String */command, /* Any */parameters,
 			successCallback, errorCallback) {
 		var server = "https://localhost:9999/afirma/";
+		console.log("El servidor es: "+server);
 		server = server + command;
+		console.log("El servicio es: "+server);
 		$.ajax({
+			data : JSON.stringify(parameters,undefined,2),
 			url : server,
 			type : 'POST',
 			contentType : 'application/json',
 			crossOrigin : true,
 			dataType : 'json',
-			data : JSON.stringify(parameters),
 			beforeSend : function(/* jqXHR */jqXHR, /* PlainObject */
 			settings) {
 				if (MiniAppletJNLP.beforeSendCallback) {
