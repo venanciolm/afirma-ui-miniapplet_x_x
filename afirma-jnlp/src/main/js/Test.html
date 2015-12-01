@@ -38,9 +38,11 @@
 	<input type="button" value="test" onClick="test();" />&nbsp;
 	<input type="button" value="open" onClick="openWindow();" />&nbsp;
 	<input type="button" value="b64" onClick="getBase64FromText();" />&nbsp;
-	<input type="button" value="Firmar" onClick="sign();" />&nbsp;&nbsp;&nbsp;
+	<input type="button" value="Firmar/plano"
+		onClick="signMsg( $('#inputText').val() );" />&nbsp;&nbsp;&nbsp;
 	<input type="button" value="Firmar/b64"
-		onClick="sign( $('#inputText').val() );" />&nbsp;&nbsp;&nbsp;
+		onClick="signBase64( $('#inputText').val() );" />&nbsp;&nbsp;&nbsp;
+	<input type="button" value="Firmar/File" onClick="signFile();" />&nbsp;&nbsp;&nbsp;
 	<input type="button" value="exit" onClick="exit_jnlp();">&nbsp;
 
 		<br />

@@ -91,7 +91,7 @@ function getBase64FromText() {
 	invoker.invoke(item);
 }
 
-function sign(base64) {
+function signMsg(textPlain) {
 	var item = {
 		algorithm : 'SHA512withRSA',
 		format : 'XAdES',
@@ -107,5 +107,41 @@ function sign(base64) {
 	invoker.setErrorCallback(pageErrorCallback);
 	invoker.setBeforeSendCallback(pageBeforeSendCallback);
 	invoker.setCompleteCallback(pageCompleteCallback);
-	invoker.sign(base64, item);
+	invoker.signMsg(textPlain, item);
+}
+function signBase64(base64) {
+	var item = {
+		algorithm : 'SHA512withRSA',
+		format : 'XAdES',
+		extraParams : 'format=XAdES Enveloping'
+	};
+	var invoker = new AfirmaClient();
+	invoker.setSuccessCallback(function(/* Anything */response, /* String */
+	textStatus, /* jqXHR */
+	jqXHR) {
+		pageSuccessCallback(response, textStatus, jqXHR);
+		$("#outputText").val(response.msg);
+	});
+	invoker.setErrorCallback(pageErrorCallback);
+	invoker.setBeforeSendCallback(pageBeforeSendCallback);
+	invoker.setCompleteCallback(pageCompleteCallback);
+	invoker.signBase64(base64, item);
+}
+function signFile() {
+	var invoker = new AfirmaClient();
+	invoker.setSuccessCallback(function(/* Anything */response, /* String */
+	textStatus, /* jqXHR */
+	jqXHR) {
+		pageSuccessCallback(response, textStatus, jqXHR);
+		$("#outputText").val(response.msg);
+	});
+	invoker.setErrorCallback(pageErrorCallback);
+	invoker.setBeforeSendCallback(pageBeforeSendCallback);
+	invoker.setCompleteCallback(pageCompleteCallback);
+	var item = {
+		algorithm : 'SHA512withRSA',
+		format : 'XAdES',
+		extraParams : 'format=XAdES Enveloping'
+	};
+	invoker.sign(item);
 }
