@@ -1,3 +1,4 @@
+var pageClient = undefined;//new AfirmaClient();
 var pageSuccessCallback = function(/* Anything */response, /* String */
 textStatus, /* jqXHR */
 jqXHR) {
@@ -30,7 +31,7 @@ function showLogCallback(errorType, errorMessage) {
 }
 
 function echo() {
-	var invoker = new AfirmaClient();
+	var invoker = new AfirmaClient(pageClient);
 	invoker.setCommand("echo");
 	invoker.setSuccessCallback(function(/* Anything */response, /* String */
 	textStatus, /* jqXHR */
@@ -44,7 +45,7 @@ function echo() {
 	invoker.invoke(undefined);
 }
 function openWindow() {
-	var invoker = new AfirmaClient();
+	var invoker = new AfirmaClient(pageClient);
 	invoker.setCommand("open");
 	invoker.setSuccessCallback(pageSuccessCallback);
 	invoker.setErrorCallback(pageErrorCallback);
@@ -53,7 +54,7 @@ function openWindow() {
 	invoker.invoke(undefined);
 }
 function exit_jnlp() {
-	var invoker = new AfirmaClient();
+	var invoker = new AfirmaClient(pageClient);
 	invoker.setCommand("exit");
 	invoker.setSuccessCallback(pageSuccessCallback);
 	invoker.setErrorCallback(pageErrorCallback);
@@ -62,7 +63,7 @@ function exit_jnlp() {
 	invoker.invoke(undefined);
 }
 function test() {
-	var invoker = new AfirmaClient();
+	var invoker = new AfirmaClient(pageClient);
 	invoker.setCommand("test");
 	invoker.setSuccessCallback(pageSuccessCallback);
 	invoker.setErrorCallback(pageErrorCallback);
@@ -77,7 +78,7 @@ function getBase64FromText() {
 		charset : "default"
 	};
 	console.log("Enviando: " + item.plainText);
-	var invoker = new AfirmaClient();
+	var invoker = new AfirmaClient(pageClient);
 	invoker.setCommand("getBase64FromText");
 	invoker.setSuccessCallback(function(/* Anything */response, /* String */
 	textStatus, /* jqXHR */
@@ -97,7 +98,7 @@ function signMsg(textPlain) {
 		format : 'XAdES',
 		extraParams : 'format=XAdES Enveloping'
 	};
-	var invoker = new AfirmaClient();
+	var invoker = new AfirmaClient(pageClient);
 	invoker.setSuccessCallback(function(/* Anything */response, /* String */
 	textStatus, /* jqXHR */
 	jqXHR) {
@@ -115,7 +116,7 @@ function signBase64(base64) {
 		format : 'XAdES',
 		extraParams : 'format=XAdES Enveloping'
 	};
-	var invoker = new AfirmaClient();
+	var invoker = new AfirmaClient(pageClient);
 	invoker.setSuccessCallback(function(/* Anything */response, /* String */
 	textStatus, /* jqXHR */
 	jqXHR) {
@@ -128,7 +129,7 @@ function signBase64(base64) {
 	invoker.signBase64(base64, item);
 }
 function signFile() {
-	var invoker = new AfirmaClient();
+	var invoker = new AfirmaClient(pageClient);
 	invoker.setSuccessCallback(function(/* Anything */response, /* String */
 	textStatus, /* jqXHR */
 	jqXHR) {

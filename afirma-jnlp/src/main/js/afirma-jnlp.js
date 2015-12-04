@@ -4,6 +4,17 @@
 //beforeSend : function(jqXHR jqXHR, PlainObject settings) {
 //complete : function(jqXHR jqXHR,String textStatus) {
  */
+InvokerObserver = function() {
+}
+InvokerObserver.constructor = InvokerObserver;
+InvokerObserver.prototype.toString = function() {
+	return "InvokerObserver";
+}
+InvokerObserver.prototype.invoke = function(/* String */command, /* Any */
+parameters, successCallback, errorCallback, beforeSendCallback,
+		completeCallback) {
+}
+
 InvokerAfirmaClient = function() {
 	this._server = "https://localhost:9999/afirma/";
 	this._invoker = function(/* String */command, /* Any */parameters,
@@ -49,54 +60,58 @@ InvokerAfirmaClient = function() {
 		});
 	};
 }
+InvokerAfirmaClient.constructor = InvokerAfirmaClient;
+InvokerAfirmaClient.prototype = new InvokerObserver();
+InvokerAfirmaClient.prototype.toString = function() {
+	return "InvokerAfirmaClient";
+}
 InvokerAfirmaClient.prototype.invoke = function(/* String */command, /* Any */
 parameters, successCallback, errorCallback, beforeSendCallback,
 		completeCallback) {
 	this._invoker(/* String */command, /* Any */parameters, successCallback,
 			errorCallback, beforeSendCallback, completeCallback);
 }
-InvokerAfirmaClient.prototype.toString = function() {
-	return "InvokerAfirmaClient";
-}
 //
 //
 //
 // PreInvoker!
 //
-PreInvokerAfirmaClient = function(invokerSubject, dummy) {
-	this._subject = invokerSubject;
-	this._dummy = dummy;
+PreInvokerAfirmaClient = function(invokerSubject) {
 	this._invoker = new InvokerAfirmaClient();
+	this._subject = invokerSubject;
+}
+PreInvokerAfirmaClient.constructor = PreInvokerAfirmaClient;
+PreInvokerAfirmaClient.prototype = new InvokerObserver();
+PreInvokerAfirmaClient.prototype.toString = function() {
+	return "PreInvokerAfirmaClient";
 }
 PreInvokerAfirmaClient.prototype.invoke = function(/* String */command, /* Any */
 parameters, successCallback, errorCallback, beforeSendCallback,
 		completeCallback) {
-	console.log("Llamando a PreInvokerAfirmaClient.invoke(" + parameters + ")");
-	this._subject.remove(this);
-	this._subject.remove(this._dummy);
-	this._subject.register(this._invoker);
-	this._invoker.invoke(/* String */command, /* Any */
-	parameters, successCallback, errorCallback, beforeSendCallback,
-			completeCallback);
-}
-PreInvokerAfirmaClient.prototype.toString = function() {
-	return "PreInvokerAfirmaClient";
-}
-//
-//
-//
-// Dummy!
-//
-DummyInvokerAfirmaClient = function() {
-}
-DummyInvokerAfirmaClient.prototype.invoke = function(/* String */command, /* Any */
-parameters, successCallback, errorCallback, beforeSendCallback,
-		completeCallback) {
-	console.log("Llamando a DummyInvokerAfirmaClient.invoke(" + parameters
-			+ ")");
-}
-DummyInvokerAfirmaClient.prototype.toString = function() {
-	return "DummyInvokerAfirmaClient";
+	var invoker = this;
+	var p_success = function(/* Any */response,/* String */textStatus,/* jqXHR */
+	jqXHR) {
+		invoker._subject.remove(invoker);
+		invoker._subject.register(invoker._invoker);
+		invoker._invoker.invoke(/* String */command, /* Any */
+		parameters, successCallback, errorCallback, beforeSendCallback,
+				completeCallback);
+	}
+	var p_error = function(/* jqXHR */jqXHR,/* String */textStatus, /* String */
+	errorThrown) {
+		if (errorCallback) {
+			errorCallback(jqXHR, textStatus, errorThrown);
+		}
+		if (completeCallback) {
+			completeCallback(jqXHR, textStatus);
+		}
+	}
+	// beforeSend : function(jqXHR jqXHR, PlainObject settings);
+	p_beforeSend = beforeSendCallback;
+	// complete : function(jqXHR jqXHR,String textStatus);
+	p_complete = undefined;
+	this._invoker.invoke(/* String */"echo", /* Any */
+	parameters, p_success, p_error, p_beforeSend, p_complete);
 }
 //
 //
@@ -105,6 +120,10 @@ DummyInvokerAfirmaClient.prototype.toString = function() {
 //
 var InvokerSubject = function() {
 	this._observers = [];
+}
+InvokerSubject.constructor = InvokerSubject;
+InvokerSubject.prototype.toString = function() {
+	return "InvokerSubject={with " + this._observers.length + " observers}";
 }
 InvokerSubject.prototype.register = function(observer) {
 	this._observers.push(observer);
@@ -119,17 +138,13 @@ parameters, successCallback, errorCallback, beforeSendCallback,
 	}
 }
 InvokerSubject.prototype.remove = function(observer) {
-	console.log("Eliminando "+observer);
 	for (i = 0; i < this._observers.length; i++) {
-		console.log("Comparando ["+i+"]"+this._observers[i]);
 		if (this._observers[i] === observer) {
-			console.log("Eliminando " + observer);
 			this._observers.splice(i, 1);
-			break;	
+			break;
 		}
-		
+
 	}
-	console.log("Saliendo!");
 }
 //
 //
@@ -137,31 +152,28 @@ InvokerSubject.prototype.remove = function(observer) {
 // 
 var AfirmaClient = function(/* AfirmaClient */parent) {
 	this._command;
-	this._root = parent;
 	this._invoker;
 	this._successCallback;
 	this._errorCallback;
 	this._beforeSendCallback;
 	this._completeCallback;
-	this.BUFFER_SIZE = 5 * 1024;
+	this.BUFFER_SIZE = 1024 * 1024;
 	this.EOF = "%%EOF%%";
 	this._data;
+	this._root = parent;
 	var root = this._root;
 	while (root) {
 		this._root = root;
 		root = root._root;
 	}
 	if (this._root) {
-		console.log("Utilizando el invoker del padre!");
 		this._invoker = this._root._invoker;
 	} else {
-		console.log("El padre no existe, creando un invoker nuevo!");
 		this._invoker = new InvokerSubject();
-		var dummy = new DummyInvokerAfirmaClient();
-		this._invoker.register(dummy);
-		this._invoker.register(new PreInvokerAfirmaClient(this._invoker,dummy));
+		this._invoker.register(new PreInvokerAfirmaClient(this._invoker));
 	}
 }
+AfirmaClient.constructor = AfirmaClient;
 AfirmaClient.prototype.setServer = function(/* String */serverBaseUrl) {
 	this._server = serverBaseUrl;
 }
@@ -181,7 +193,6 @@ AfirmaClient.prototype.setCommand = function(/* String */command) {
 	this._command = command;
 }
 AfirmaClient.prototype.invoke = function( /* Any */parameters) {
-	console.log("Llamando a AfirmaClient.invoke(" + parameters + ")");
 	this._invoker.invoke(/* String */this._command, /* Any */
 	parameters, this._successCallback, this._errorCallback,
 			this._beforeSendCallback, this._completeCallback)
@@ -223,7 +234,6 @@ AfirmaClient.prototype.getWrappedErrorCallback = function() {
 		if (client._completeCallback) {
 			client._completeCallback(jqXHR, textStatus);
 		}
-
 	}
 }
 AfirmaClient.prototype.signBase64 = function(/* String */base64,/* Any */
