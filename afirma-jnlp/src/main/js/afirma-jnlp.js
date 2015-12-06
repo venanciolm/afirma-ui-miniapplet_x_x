@@ -111,7 +111,7 @@ parameters, successCallback, errorCallback, beforeSendCallback,
 	// complete : function(jqXHR jqXHR,String textStatus);
 	p_complete = undefined;
 	this._invoker.invoke(/* String */"echo", /* Any */
-	parameters, p_success, p_error, p_beforeSend, p_complete);
+	undefined, p_success, p_error, p_beforeSend, p_complete);
 }
 //
 //
