@@ -28,8 +28,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
-import javax.swing.JButton;
-
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -68,7 +66,6 @@ public class ServerCtrl {
 	private CountDownLatch serverLatch = new CountDownLatch(1);
 	private Executor executor;
 	private MiniAfirmaApplet wrapper;
-	private JButton openButton;
 	private CloseWindowAdapter closeHandler;
 
 	/**
@@ -113,7 +110,6 @@ public class ServerCtrl {
 		request.setExecutor(this.executor);
 		request.setWrapper(this.wrapper);
 		request.setCloseHandler(this.closeHandler);
-		request.setOpenButton(this.openButton);
 
 		final CorsFilter cors = new CorsFilter();
 		final ResourceConfig resourceConfig = new ResourceConfig().register(request).register(cors);
@@ -218,21 +214,4 @@ public class ServerCtrl {
 		this.closeHandler = closeImpl;
 	}
 
-	/**
-	 * Devuelve el valor de la propiedad 'openButton'
-	 *
-	 * @return Propiedad openButton
-	 */
-	public JButton getOpenButton() {
-		return this.openButton;
-	}
-
-	/**
-	 * Asigna el valor de la propiedad 'openButton'
-	 *
-	 * @param openButton valor que se le quiere dar a la propiedad 'openButton'
-	 */
-	public void setOpenButton(final JButton openButton) {
-		this.openButton = openButton;
-	}
 }

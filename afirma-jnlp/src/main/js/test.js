@@ -1,4 +1,4 @@
-var pageClient = undefined;//new AfirmaClient();
+var pageClient = new AfirmaClient();
 var pageSuccessCallback = function(/* Anything */response, /* String */
 textStatus, /* jqXHR */
 jqXHR) {
@@ -44,27 +44,10 @@ function echo() {
 	invoker.setCompleteCallback(pageCompleteCallback);
 	invoker.invoke(undefined);
 }
-function openWindow() {
-	var invoker = new AfirmaClient(pageClient);
-	invoker.setCommand("open");
-	invoker.setSuccessCallback(pageSuccessCallback);
-	invoker.setErrorCallback(pageErrorCallback);
-	invoker.setBeforeSendCallback(pageBeforeSendCallback);
-	invoker.setCompleteCallback(pageCompleteCallback);
-	invoker.invoke(undefined);
-}
+
 function exit_jnlp() {
 	var invoker = new AfirmaClient(pageClient);
 	invoker.setCommand("exit");
-	invoker.setSuccessCallback(pageSuccessCallback);
-	invoker.setErrorCallback(pageErrorCallback);
-	invoker.setBeforeSendCallback(pageBeforeSendCallback);
-	invoker.setCompleteCallback(pageCompleteCallback);
-	invoker.invoke(undefined);
-}
-function test() {
-	var invoker = new AfirmaClient(pageClient);
-	invoker.setCommand("test");
 	invoker.setSuccessCallback(pageSuccessCallback);
 	invoker.setErrorCallback(pageErrorCallback);
 	invoker.setBeforeSendCallback(pageBeforeSendCallback);

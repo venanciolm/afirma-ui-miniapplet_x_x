@@ -37,7 +37,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.JButton;
 import javax.swing.JFrame;
 
 import org.slf4j.Logger;
@@ -53,7 +52,6 @@ public class Main {
 	private static int POOL_SIZE = 5;
 
 	public void init() {
-		final JButton b = new JButton("");
 		final MiniAfirmaApplet applet = startApplet();
 		final ServerCtrl serverCtrl;
 		final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(POOL_SIZE, POOL_SIZE, 10, TimeUnit.SECONDS,
@@ -64,12 +62,9 @@ public class Main {
 		serverCtrl.setCloseHander(closeImpl);
 		serverCtrl.setExecutor(threadPoolExecutor);
 		serverCtrl.setWrapper(applet);
-		serverCtrl.setOpenButton(b);
 		frame.setUndecorated(true);
 		frame.setSize(0, 0);
 		frame.addWindowListener(closeImpl);
-		frame.add(b);
-		b.addActionListener(new OpenFileChooser(frame));
 		frame.setSize(0, 0);
 		threadPoolExecutor.execute(new StartSeverTask(serverCtrl));
 		final URL image = Thread.currentThread().getContextClassLoader().getResource("resources/certicon.png");
@@ -78,7 +73,6 @@ public class Main {
 			trayIcon.setImageAutoSize(true);
 			final SystemTray tray = SystemTray.getSystemTray();
 			// Create a pop-up menu components
-			final MenuItem aboutItem = new MenuItem("About");
 			final Menu displayMenu = new Menu("Display");
 			final MenuItem infoItem = new MenuItem("Info");
 			final MenuItem exitItem = new MenuItem("Exit");
@@ -96,8 +90,6 @@ public class Main {
 
 			// Add components to pop-up menu
 			final PopupMenu popup = new PopupMenu();
-			popup.add(aboutItem);
-			popup.addSeparator();
 			popup.add(displayMenu);
 			displayMenu.add(infoItem);
 			displayMenu.add(exitItem);
