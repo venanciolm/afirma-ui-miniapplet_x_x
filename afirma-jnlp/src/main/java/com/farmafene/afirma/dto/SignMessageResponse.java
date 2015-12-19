@@ -25,5 +25,42 @@ package com.farmafene.afirma.dto;
 
 @SuppressWarnings("serial")
 public class SignMessageResponse extends StringMessageResponse {
+	private String pemCertificate;
+
+	public SignMessageResponse() {
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(getClass().getSimpleName()).append(" [");
+		sb.append("msg=").append(getMsg());
+		sb.append(", pem=").append(pemCertificate);
+		sb.append(", error=").append(getError());
+		sb.append(", descError=").append(getDescError());
+		sb.append("]");
+		return sb.toString();
+	}
+
+	/**
+	 * @return the pemCertificate
+	 */
+	public String getPemCertificate() {
+		return pemCertificate;
+	}
+
+	/**
+	 * @param pemCertificate
+	 *            the pemCertificate to set
+	 */
+	public void setPemCertificate(String pemCertificate) {
+		this.pemCertificate = pemCertificate;
+	}
 
 }

@@ -24,6 +24,6 @@
 package com.farmafene.afirma.dto;
 
 @SuppressWarnings("serial")
-public class CounterSignMessageResponse extends StringMessageResponse {
+public class CounterSignMessageResponse extends SignMessageResponse {
 
 }

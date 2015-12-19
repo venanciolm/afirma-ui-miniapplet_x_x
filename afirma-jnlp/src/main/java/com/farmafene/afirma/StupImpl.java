@@ -28,6 +28,7 @@ import java.applet.AppletStub;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Locale;
 
 import javax.jnlp.BasicService;
 import javax.jnlp.ServiceManager;
@@ -104,7 +105,11 @@ public class StupImpl implements AppletStub {
 	@Override
 	public String getParameter(final String name) {
 		logger.info("getParameter({})", name);
-		return null;
+		String parameter="";
+		if ("locale".equals(name)) {
+			parameter = Locale.getDefault().toString();
+		}
+		return parameter;
 	}
 
 	/**

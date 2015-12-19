@@ -160,6 +160,7 @@ var AfirmaClient = function(/* AfirmaClient */parent) {
 	this.BUFFER_SIZE = 1024 * 1024;
 	this.EOF = "%%EOF%%";
 	this._data;
+	this._pemCertificate;
 	this._root = parent;
 	var root = this._root;
 	while (root) {
@@ -199,6 +200,9 @@ AfirmaClient.prototype.invoke = function( /* Any */parameters) {
 }
 AfirmaClient.prototype.getData = function() {
 	return this._data;
+}
+AfirmaClient.prototype.getPemCertificate = function() {
+	return this._pemCertificate;
 }
 AfirmaClient.prototype.setData = function(/* string */data) {
 	this._data = data;
@@ -293,7 +297,14 @@ AfirmaClient.prototype.sign = function(/* Any */parameters) {
 				client._completeCallback(jqXHR, textStatus);
 			}
 		} else {
-			response.msg = client._data;
+			var dataB64 = client._data;
+			var separatorIdx = dataB64.indexOf("|");
+			if ((separatorIdx + 1) < dataB64.length) {
+				response.msg = dataB64.substring(separatorIdx + 1);
+				response.pemCertificate = dataB64.substring(0, separatorIdx);
+			} else {
+				response.msg = dataB64.substring(separatorIdx + 1);
+			}
 			client.setData("");
 			if (client._successCallback) {
 				client._successCallback(response, textStatus, jqXHR);
