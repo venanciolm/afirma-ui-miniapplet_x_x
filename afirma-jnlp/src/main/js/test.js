@@ -38,6 +38,8 @@ function echo() {
 	jqXHR) {
 		pageSuccessCallback(response, textStatus, jqXHR);
 		$("#outputText").val(response.msg);
+		pageSuccessCallback(response, textStatus, jqXHR);
+		$("#pem").val('');
 	});
 	invoker.setErrorCallback(pageErrorCallback);
 	invoker.setBeforeSendCallback(pageBeforeSendCallback);
@@ -53,6 +55,8 @@ function exit_jnlp() {
 	invoker.setBeforeSendCallback(pageBeforeSendCallback);
 	invoker.setCompleteCallback(pageCompleteCallback);
 	invoker.invoke(undefined);
+	$("#outputText").val('');
+	$("#pem").val('');
 }
 
 function getBase64FromText() {
@@ -68,6 +72,7 @@ function getBase64FromText() {
 	jqXHR) {
 		pageSuccessCallback(response, textStatus, jqXHR);
 		$("#outputText").val(response.msg);
+		$("#pem").val('');
 	});
 	invoker.setErrorCallback(pageErrorCallback);
 	invoker.setBeforeSendCallback(pageBeforeSendCallback);
@@ -87,6 +92,7 @@ function signMsg(textPlain) {
 	jqXHR) {
 		pageSuccessCallback(response, textStatus, jqXHR);
 		$("#outputText").val(response.msg);
+		$("#pem").val(response.pemCertificate);
 	});
 	invoker.setErrorCallback(pageErrorCallback);
 	invoker.setBeforeSendCallback(pageBeforeSendCallback);
@@ -105,6 +111,7 @@ function signBase64(base64) {
 	jqXHR) {
 		pageSuccessCallback(response, textStatus, jqXHR);
 		$("#outputText").val(response.msg);
+		$("#pem").val(response.pemCertificate);
 	});
 	invoker.setErrorCallback(pageErrorCallback);
 	invoker.setBeforeSendCallback(pageBeforeSendCallback);
@@ -118,6 +125,7 @@ function signFile() {
 	jqXHR) {
 		pageSuccessCallback(response, textStatus, jqXHR);
 		$("#outputText").val(response.msg);
+		$("#pem").val(response.pemCertificate);
 	});
 	invoker.setErrorCallback(pageErrorCallback);
 	invoker.setBeforeSendCallback(pageBeforeSendCallback);

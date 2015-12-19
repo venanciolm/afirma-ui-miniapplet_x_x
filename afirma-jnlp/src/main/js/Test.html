@@ -41,11 +41,8 @@
 	<input type="button" value="Firmar/b64"
 		onClick="signBase64( $('#inputText').val() );" />&nbsp;&nbsp;&nbsp;
 	<input type="button" value="Firmar/File" onClick="signFile();" />&nbsp;&nbsp;&nbsp;
-	<input type="button" value="exit" onClick="exit_jnlp();">&nbsp;
-
-		<br />
+	<input type="button" value="exit" onClick="exit_jnlp();">&nbsp;<br />
 		<div id="resultado"></div>
-
 		<div>
 			<span>Consola</span> <br> <textarea id="console" cols="150"
 					rows="10">
@@ -54,15 +51,19 @@
 		<div>
 			<span>Texto que se va a firmar</span> <br> <textarea
 					id="inputText" cols="150" rows="10"></textarea>
-		</div> <br>
-
-			<div>
-				<span>Texto firmado en base64</span> <br />
-				<textarea id="outputText" cols="150" rows="10"></textarea>
-			</div> <br />
-			<div id="preloader">
-				<div id="status">&nbsp;</div>
-			</div>
+		</div> <br />
+	<div>
+		<span>Salida</span> <br />
+		<textarea id="outputText" cols="150" rows="10"></textarea>
+	</div>
+	<br />
+	<div>
+		<span>Certificado base64</span> <br />
+		<textarea id="pem" cols="150" rows="10"></textarea>
+	</div>
+	<div id="preloader">
+		<div id="status">&nbsp;</div>
+	</div>
 </body>
 </html>
 
