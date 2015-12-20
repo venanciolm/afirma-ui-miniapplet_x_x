@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<jnlp spec="1.0+" codebase="https://vlopezm01w7.indra.es/jnlp/afirma" href="$outputFile">
+<jnlp spec="1.0+" codebase="https://dev.farmafene.com/jnlp/afirma" href="$outputFile">
  <information>
     <title>@firma - Jnlp</title>
     <vendor>Farmafene.com</vendor>
