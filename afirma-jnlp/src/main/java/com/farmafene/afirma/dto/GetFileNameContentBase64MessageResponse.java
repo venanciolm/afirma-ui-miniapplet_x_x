@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2015 farmafene.com
+ * Copyright (c) 2009-2016 farmafene.com
  * All rights reserved.
  * 
  * Permission is hereby granted, free  of charge, to any person obtaining
@@ -24,6 +24,43 @@
 package com.farmafene.afirma.dto;
 
 @SuppressWarnings("serial")
-public class GetFileNameContentBase64MessageResponse extends StringMessageResponse {
+public class GetFileNameContentBase64MessageResponse extends
+		StringMessageResponse {
+	private String fileName;
 
+	public GetFileNameContentBase64MessageResponse() {
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(getClass().getSimpleName()).append(" [");
+		sb.append("fileName=").append(fileName);
+		sb.append(", msg=").append(getMsg());
+		sb.append(", error=").append(getError());
+		sb.append(", descError=").append(getDescError());
+		sb.append("]");
+		return sb.toString();
+	}
+
+	/**
+	 * @return the fileName
+	 */
+	public String getFileName() {
+		return fileName;
+	}
+
+	/**
+	 * @param fileName
+	 *            the fileName to set
+	 */
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
 }

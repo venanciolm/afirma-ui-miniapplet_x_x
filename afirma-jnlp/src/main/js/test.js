@@ -84,7 +84,7 @@ function signMsg(textPlain) {
 	var item = {
 		algorithm : 'SHA512withRSA',
 		format : 'XAdES',
-		extraParams : 'format=XAdES Enveloping'
+		extraParams : 'format=XAdES Detached\nfilters.1=signingCert:;nonexpired:'
 	};
 	var invoker = new AfirmaClient(pageClient);
 	invoker.setSuccessCallback(function(/* Anything */response, /* String */
@@ -103,7 +103,7 @@ function signBase64(base64) {
 	var item = {
 		algorithm : 'SHA512withRSA',
 		format : 'XAdES',
-		extraParams : 'format=XAdES Enveloping'
+		extraParams : 'format=XAdES Detached\nfilters.1=signingCert:;nonexpired:'
 	};
 	var invoker = new AfirmaClient(pageClient);
 	invoker.setSuccessCallback(function(/* Anything */response, /* String */
@@ -133,7 +133,27 @@ function signFile() {
 	var item = {
 		algorithm : 'SHA512withRSA',
 		format : 'XAdES',
-		extraParams : 'format=XAdES Enveloping'
+		extraParams : 'format=XAdES Detached\nfilters.1=signingCert:;nonexpired:'
 	};
 	invoker.sign(item);
+}
+function signFile2p() {
+	var invoker = new AfirmaClient(pageClient);
+	invoker.setSuccessCallback(function(/* Anything */response, /* String */
+	textStatus, /* jqXHR */
+	jqXHR) {
+		pageSuccessCallback(response, textStatus, jqXHR);
+		$("#outputText").val(response.msg);
+		$("#pem").val(response.fileName);
+	});
+	var params = {
+			title: 'Selecione fichero!'
+	};
+	// extensions;
+	// description;
+	// filePath;			
+	invoker.setErrorCallback(pageErrorCallback);
+	invoker.setBeforeSendCallback(pageBeforeSendCallback);
+	invoker.setCompleteCallback(pageCompleteCallback);
+	invoker.getFileNameContentBase64(params);
 }

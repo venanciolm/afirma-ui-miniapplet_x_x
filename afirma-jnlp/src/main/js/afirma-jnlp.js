@@ -1,8 +1,8 @@
 /*
-//success : function( Anything response,String textStatus, jqXHR jqXHR)
-//error : function(jqXHR jqXHR,String textStatus, String errorThrown)
-//beforeSend : function(jqXHR jqXHR, PlainObject settings) {
-//complete : function(jqXHR jqXHR,String textStatus) {
+ * //success : function( Anything response,String textStatus, jqXHR jqXHR)
+ * //error : function(jqXHR jqXHR,String textStatus, String errorThrown)
+ * //beforeSend : function(jqXHR jqXHR, PlainObject settings) { //complete :
+ * function(jqXHR jqXHR,String textStatus) {
  */
 InvokerObserver = function() {
 }
@@ -298,14 +298,14 @@ AfirmaClient.prototype.sign = function(/* Any */parameters) {
 			}
 		} else {
 			var dataB64 = client._data;
-			var separatorIdx = dataB64.indexOf("|");
-			if ((separatorIdx + 1) < dataB64.length) {
-				response.msg = dataB64.substring(separatorIdx + 1);
-				response.pemCertificate = dataB64.substring(0, separatorIdx);
-			} else {
-				response.msg = dataB64.substring(separatorIdx + 1);
-			}
 			client.setData("");
+			var items = dataB64.split("|");
+			if (items.length == 2) {
+				response.msg = items[1];
+				response.pemCertificate = items[0];
+			} else {
+				response.msg = items[0];
+			}
 			if (client._successCallback) {
 				client._successCallback(response, textStatus, jqXHR);
 			}
@@ -319,4 +319,51 @@ AfirmaClient.prototype.sign = function(/* Any */parameters) {
 	cSign.setCompleteCallback(undefined);
 	cSign.setCommand("sign");
 	cSign.invoke(parameters);
+}
+AfirmaClient.prototype.getFileNameContentBase64 = function(/* Any */parameters) {
+	var client = this;
+	var cFile = new AfirmaClient(this);
+	client.setData("");
+	cFile.setSuccessCallback(function( /* Any */response,/* String */
+	textStatus, /* jqXHR */jqXHR) {
+		if (client.EOF != response.msg && 0 == response.error) {
+			client._data += response.msg;
+			cRemaining = new AfirmaClient(cFile);
+			cRemaining.setCommand("getRemainingData");
+			cRemaining.setSuccessCallback(cFile._successCallback);
+			cRemaining.setErrorCallback(client.getWrappedErrorCallback());
+			cRemaining.setBeforeSendCallback(client._beforeSendCallback);
+			cRemaining.setCompleteCallback(undefined);
+			cRemaining.invoke(undefined);
+		} else if (0 != response.error) {
+			client.setData("");
+			if (client._successCallback) {
+				client._successCallback(response, textStatus, jqXHR);
+			}
+			if (client._completeCallback) {
+				client._completeCallback(jqXHR, textStatus);
+			}
+		} else {
+			var dataB64 = client._data;
+			client.setData("");
+			var items = dataB64.split("|");
+			if (items.length == 2) {
+				response.msg = items[1];
+				response.fileName = items[0];
+			} else {
+				response.msg = items[0];
+			}
+			if (client._successCallback) {
+				client._successCallback(response, textStatus, jqXHR);
+			}
+			if (client._completeCallback) {
+				client._completeCallback(jqXHR, textStatus);
+			}
+		}
+	});
+	cFile.setErrorCallback(client.getWrappedErrorCallback());
+	cFile.setBeforeSendCallback(client._beforeSendCallback);
+	cFile.setCompleteCallback(undefined);
+	cFile.setCommand("getFileNameContentBase64");
+	cFile.invoke(parameters);
 }
