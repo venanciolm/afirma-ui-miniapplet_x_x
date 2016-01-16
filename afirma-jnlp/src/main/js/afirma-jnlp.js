@@ -44,10 +44,17 @@ InvokerAfirmaClient = function() {
 			},
 			success : function(/* Anything */response, /* String */
 			textStatus, /* jqXHR */jqXHR) {
-				if (successCallback) {
-					successCallback(/* Anything */response, /* String */
-					textStatus, /* jqXHR */
-					jqXHR);
+				if (response.error == 0) {
+					if (successCallback) {
+						successCallback(/* Anything */response, /* String */
+						textStatus, /* jqXHR */
+						jqXHR);
+					}
+				} else {
+					if (errorCallback) {
+						errorCallback(/* jqXHR */jqXHR,/* String */textStatus,/* String */
+						response.descError);
+					}
 				}
 			},
 			error : function(/* jqXHR */jqXHR,/* String */textStatus,/* String */
@@ -279,6 +286,7 @@ AfirmaClient.prototype.sign = function(/* Any */parameters) {
 	textStatus, /* jqXHR */jqXHR) {
 		if (client.EOF != response.msg && 0 == response.error) {
 			client._data += response.msg;
+			response.msg = null;
 			cRemaining = new AfirmaClient(cSign);
 			cRemaining.setCommand("getRemainingData");
 			cRemaining.setSuccessCallback(cSign._successCallback);
@@ -326,6 +334,7 @@ AfirmaClient.prototype.getFileNameContentBase64 = function(/* Any */parameters) 
 	textStatus, /* jqXHR */jqXHR) {
 		if (client.EOF != response.msg && 0 == response.error) {
 			client._data += response.msg;
+			response.msg = null;
 			cRemaining = new AfirmaClient(cFile);
 			cRemaining.setCommand("getRemainingData");
 			cRemaining.setSuccessCallback(cFile._successCallback);
