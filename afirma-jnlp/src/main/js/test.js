@@ -26,10 +26,6 @@ textStatus) {
 	$('#preloader').hide();
 };
 
-function showLogCallback(errorType, errorMessage) {
-	showLog("Type: " + errorType + "\nMessage: " + errorMessage);
-}
-
 function echo() {
 	var invoker = new AfirmaClient(pageClient);
 	invoker.setCommand("echo");
@@ -60,10 +56,9 @@ function exit_jnlp() {
 }
 
 function getBase64FromText() {
-	var item = {
-		plainText : $("#inputText").val(),
-		charset : "default"
-	};
+	var item = new Object();
+	item.plainText = $("#inputText").val();
+	item.charset = "default";
 	console.log("Enviando: " + item.plainText);
 	var invoker = new AfirmaClient(pageClient);
 	invoker.setCommand("getBase64FromText");
@@ -81,11 +76,10 @@ function getBase64FromText() {
 }
 
 function signMsg(textPlain) {
-	var item = {
-		algorithm : 'SHA512withRSA',
-		format : 'XAdES',
-		extraParams : 'format=XAdES Detached\nfilters.1=signingCert:;nonexpired:'
-	};
+	var item = new Object();
+	item.algorithm = 'SHA512withRSA';
+	item.format = 'XAdES';
+	item.extraParams = 'format=XAdES Detached\nfilters.1=signingCert:;nonexpired:';
 	var invoker = new AfirmaClient(pageClient);
 	invoker.setSuccessCallback(function(/* Anything */response, /* String */
 	textStatus, /* jqXHR */
@@ -100,11 +94,10 @@ function signMsg(textPlain) {
 	invoker.signMsg(textPlain, item);
 }
 function signBase64(base64) {
-	var item = {
-		algorithm : 'SHA512withRSA',
-		format : 'XAdES',
-		extraParams : 'format=XAdES Detached\nfilters.1=signingCert:;nonexpired:'
-	};
+	var item = new Object();
+	item.algorithm = 'SHA512withRSA';
+	item.format = 'XAdES';
+	item.extraParams = 'format=XAdES Detached\nfilters.1=signingCert:;nonexpired:';
 	var invoker = new AfirmaClient(pageClient);
 	invoker.setSuccessCallback(function(/* Anything */response, /* String */
 	textStatus, /* jqXHR */
@@ -130,11 +123,13 @@ function signFile() {
 	invoker.setErrorCallback(pageErrorCallback);
 	invoker.setBeforeSendCallback(pageBeforeSendCallback);
 	invoker.setCompleteCallback(pageCompleteCallback);
-	var item = {
-		algorithm : 'SHA512withRSA',
-		format : 'XAdES',
-		extraParams : 'format=XAdES Detached\nfilters.1=signingCert:;nonexpired:'
-	};
+	var item = new Object();
+	item.algorithm = 'SHA512withRSA';
+	item.format = 'PAdES';
+	item.extraParams = 'format=PAdES-Simple\nfilters.1=signingCert:;nonexpired:';
+	item.format = 'XAdES';
+	item.extraParams = 'format=XAdES Detached\nfilters.1=signingCert:;nonexpired:';
+
 	invoker.sign(item);
 }
 function signFile2p() {
@@ -142,16 +137,38 @@ function signFile2p() {
 	invoker.setSuccessCallback(function(/* Anything */response, /* String */
 	textStatus, /* jqXHR */
 	jqXHR) {
-		pageSuccessCallback(response, textStatus, jqXHR);
-		$("#outputText").val(response.msg);
-		$("#pem").val(response.fileName);
+		var separatorExt = response.fileName.lastIndexOf(".");
+		var extension = response.fileName.substring(separatorExt + 1);
+		var item = new Object();
+		item.algorithm = 'SHA512withRSA';
+		if (extension.toUpperCase() == "PDF") {
+			item.format = 'PAdES';
+			item.extraParams = 'format=PAdES-Simple';
+		} else {
+			item.format = 'XAdES';
+			item.extraParams = 'format=XAdES Detached';
+		}
+		item.extraParams = item.extraParams
+				+ "\nfilters.1=signingCert:;nonexpired:"
+		var invokerSign = new AfirmaClient(invoker);
+		invokerSign.setErrorCallback(pageErrorCallback);
+		invokerSign.setBeforeSendCallback(pageBeforeSendCallback);
+		invokerSign.setCompleteCallback(pageCompleteCallback);
+		invokerSign.setSuccessCallback(function(
+		/* Anything */response, /* String */
+		textStatus, /* jqXHR */
+		jqXHR) {
+			pageSuccessCallback(response, textStatus, jqXHR);
+			$("#outputText").val(response.msg);
+			$("#pem").val(response.pemCertificate);
+		});
+		invokerSign.signBase64(response.msg, item);
 	});
-	var params = {
-			title: 'Selecione fichero!'
-	};
-	// extensions;
-	// description;
-	// filePath;			
+	var params = new Object();
+	params.title = "Selecione fichero!";
+	params.extensions = "pdf,zip,odt,ini";
+	params.description = undefined;
+	params.filePath = undefined;
 	invoker.setErrorCallback(pageErrorCallback);
 	invoker.setBeforeSendCallback(pageBeforeSendCallback);
 	invoker.setCompleteCallback(pageCompleteCallback);

@@ -1,8 +1,8 @@
 /*
  * //success : function( Anything response,String textStatus, jqXHR jqXHR)
  * //error : function(jqXHR jqXHR,String textStatus, String errorThrown)
- * //beforeSend : function(jqXHR jqXHR, PlainObject settings) { //complete :
- * function(jqXHR jqXHR,String textStatus) {
+ * //beforeSend : function(jqXHR jqXHR, PlainObject settings) {
+ * //complete : function(jqXHR jqXHR,String textStatus) {
  */
 InvokerObserver = function() {
 }
@@ -221,11 +221,10 @@ parameters,/* String */charset) {
 	textStatus, /* jqXHR */jqXHR) {
 		client.signBase64(response.msg, parameters);
 	});
+	var item = new Object();
+	item.plainText = textPlain;
+	item.charset = charset;
 	cBase64.setCommand("getBase64FromText");
-	var item = {
-		plainText : textPlain,
-		charset : charset
-	};
 	cBase64.invoke(item);
 }
 AfirmaClient.prototype.getWrappedErrorCallback = function() {
@@ -267,10 +266,9 @@ parameters) {
 		msgRequest = client.getData();
 		client.setData("");
 	}
+	var parametersCarga = new Object();
+	parametersCarga.data = msgRequest;
 	cAddData.setCommand("addData");
-	var parametersCarga = {
-		data : msgRequest
-	};
 	cAddData.invoke(parametersCarga);
 }
 AfirmaClient.prototype.sign = function(/* Any */parameters) {
