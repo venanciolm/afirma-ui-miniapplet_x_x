@@ -152,25 +152,42 @@ function signFile2p() {
 				+ "\nfilters.1=signingCert:;nonexpired:"
 		var invokerSign = new AfirmaClient(invoker);
 		invokerSign.setErrorCallback(pageErrorCallback);
-		invokerSign.setBeforeSendCallback(pageBeforeSendCallback);
+		invokerSign.setBeforeSendCallback(undefined);
 		invokerSign.setCompleteCallback(pageCompleteCallback);
 		invokerSign.setSuccessCallback(function(
 		/* Anything */response, /* String */
 		textStatus, /* jqXHR */
 		jqXHR) {
-			pageSuccessCallback(response, textStatus, jqXHR);
-			$("#outputText").val(response.msg);
+			if (extension.toUpperCase() == "PDF") {
+				$("#outputText").val(response.msg);
+			} else {
+				$("#outputText").val(base64ToString(response.msg));
+			}
 			$("#pem").val(response.pemCertificate);
+			if (pageSuccessCallback) {
+				pageSuccessCallback(response, textStatus, jqXHR);
+			}
 		});
 		invokerSign.signBase64(response.msg, item);
 	});
 	var params = new Object();
-	params.title = "Selecione fichero!";
-	params.extensions = "pdf,zip,odt,ini";
+	params.title = "Seleccione fichero:";
+	params.extensions = "pdf,zip,odt,ini,rtf,doc,docx";
 	params.description = undefined;
 	params.filePath = undefined;
-	invoker.setErrorCallback(pageErrorCallback);
+	invoker.setErrorCallback(function(/* jqXHR */jqXHR,/* String */
+	textStatus,/* String */
+	descError) {
+		if (pageErrorCallback) {
+			pageErrorCallback(/* jqXHR */jqXHR,/* String */textStatus,/* String */
+			descError)
+		}
+		if (pageCompleteCallback) {
+			pageCompleteCallback( /* jqXHR */jqXHR, /* String */
+			textStatus)
+		}
+	});
 	invoker.setBeforeSendCallback(pageBeforeSendCallback);
-	invoker.setCompleteCallback(pageCompleteCallback);
+	invoker.setCompleteCallback(undefined);
 	invoker.getFileNameContentBase64(params);
 }
