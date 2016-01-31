@@ -120,7 +120,10 @@ function signBase64(base64) {
 			$("#outputText").val(response.msg);
 		});
 		$("#pem").val(response.pemCertificate);
-		decode.getTextFromBase64(response.msg, undefined);
+		var decodeParams = new Object();
+		decodeParams.data = response.msg;
+		decodeParams.charset = "default";
+		decode.getTextFromBase64(decodeParams);
 	});
 	invoker.signBase64(base64, item);
 }
@@ -142,7 +145,10 @@ function signFile() {
 			$("#outputText").val(response.msg);
 		});
 		$("#pem").val(response.pemCertificate);
-		decode.getTextFromBase64(response.msg, undefined);
+		var decodeParams = new Object();
+		decodeParams.data = response.msg;
+		decodeParams.charset = "default";
+		decode.getTextFromBase64(decodeParams);
 	});
 	var item = new Object();
 	item.algorithm = 'SHA512withRSA';
@@ -195,7 +201,10 @@ function signFile2p() {
 					}
 					$("#outputText").val(response.msg);
 				});
-				decode.getTextFromBase64(response.msg, undefined);
+				var decodeParams = new Object();
+				decodeParams.data = response.msg;
+				decodeParams.charset = "default";
+				decode.getTextFromBase64(decodeParams);
 			}
 			$("#pem").val(response.pemCertificate);
 		});
