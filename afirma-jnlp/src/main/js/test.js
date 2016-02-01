@@ -93,7 +93,11 @@ function signMsg(textPlain) {
 			$("#outputText").val(response.msg);
 		});
 		$("#pem").val(response.pemCertificate);
-		decode.getTextFromBase64(response.msg, undefined);
+		console.log("Decodificacioón!");
+		var decodeParams = new Object();
+		decodeParams.data = response.msg;
+		decodeParams.charset = "default";
+		decode.getTextFromBase64(decodeParams);
 	});
 	invoker.signMsg(textPlain, item);
 }
