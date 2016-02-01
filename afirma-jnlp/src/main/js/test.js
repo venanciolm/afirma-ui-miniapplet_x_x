@@ -59,7 +59,6 @@ function getBase64FromText() {
 	item.plainText = $("#inputText").val();
 	item.charset = "default";
 	var invoker = new AfirmaClient(pageClient);
-	invoker.setCommand("getBase64FromText");
 	invoker.setSuccessCallback(function(/* Anything */response, /* String */
 	textStatus, /* jqXHR */
 	jqXHR) {
@@ -69,7 +68,7 @@ function getBase64FromText() {
 		$("#outputText").val(response.msg);
 		$("#pem").val('');
 	});
-	invoker.invoke(item);
+	invoker.getBase64FromText(item);
 }
 
 function signMsg(textPlain) {
@@ -203,6 +202,7 @@ function signFile2p() {
 				});
 				var decodeParams = new Object();
 				decodeParams.data = response.msg;
+				console.log("El tamaño en B64 es: "+decodeParams.data.length);
 				decodeParams.charset = "default";
 				decode.getTextFromBase64(decodeParams);
 			}
