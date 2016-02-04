@@ -168,7 +168,7 @@ InvokerSubject.prototype.remove = function(observer) {
 // getTextFromBase64 : function (dataB64, charset)
 // sign : function (dataB64, algorithm, format, params, successCallback,
 // errorCallback)
-// getMultiFileNameContentBase64 : function (title, extensions, description,
+// getFileNameContentBase64 : function (title, extensions, description,
 // filePath)
 //
 // cargarMiniApplet : function (base, keystore)
@@ -183,6 +183,8 @@ InvokerSubject.prototype.remove = function(observer) {
 // getErrorType : function ()
 // getCurrentLog : function ()
 // setServlets : function (storageServlet, retrieverServlet) {
+// getMultiFileNameContentBase64 : function (title, extensions, description,
+// filePath)
 //
 var AfirmaClient = function(/* AfirmaClient */parent) {
 	this._command;

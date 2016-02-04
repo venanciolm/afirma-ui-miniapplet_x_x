@@ -47,7 +47,9 @@
 		</script>
 		<option>echo</option>
 		<script type="text/javascript">
-			datos.push(echo);
+			datos.push(function() {
+				pageClient.echo()
+			});
 		</script>
 		<option>getBase64FromText</option>
 		<script type="text/javascript">
