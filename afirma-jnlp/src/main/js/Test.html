@@ -34,32 +34,82 @@
 </style>
 </head>
 <body>
-	<input type="button" value="echo" onClick="echo();" />&nbsp;
-	<input type="button" value="b64" onClick="getBase64FromText();" />&nbsp;
-	<input type="button" value="Firmar/plano"
-		onClick="signMsg( $('#inputText').val() );" />&nbsp;
-	<input type="button" value="Firmar/b64"
-		onClick="signBase64( $('#inputText').val() );" />&nbsp;
-	<input type="button" value="Firmar/File" onClick="signFile();" />&nbsp;
-	<input type="button" value="Firmar/FileByName" onClick="signFile2p();" />&nbsp;&nbsp;&nbsp;
-	<input type="button" value="exit" onClick="exit_jnlp();">&nbsp;<br />
-		<div id="resultado"></div>
-		<div>
-			<span>Consola</span> <br> <textarea id="console" cols="150"
-					rows="10">
+	<script type="text/javascript">
+		var datos = [];
+	</script>
+
+	<select id="combo">
+		<option>----</option>
+		<script type="text/javascript">
+			datos.push(function() {
+				alert("Seleccione!")
+			});
+		</script>
+		<option>echo</option>
+		<script type="text/javascript">
+			datos.push(echo);
+		</script>
+		<option>getBase64FromText</option>
+		<script type="text/javascript">
+			datos.push(getBase64FromText);
+		</script>
+		<option>getTextFromBase64</option>
+		<script type="text/javascript">
+			datos.push(getTextFromBase64);
+		</script>
+		<option>Firmar/File</option>
+		<script type="text/javascript">
+			datos.push(signFile);
+		</script>
+		<option>Firmar/FileByName</option>
+		<script type="text/javascript">
+			datos.push(signFile2p);
+		</script>
+		<option>Firmar plano</option>
+		<script type="text/javascript">
+			datos.push(signMsg);
+		</script>
+		<option>Firmar base64</option>
+		<script type="text/javascript">
+			datos.push(signBase64);
+		</script>
+		<option></option>
+		<script type="text/javascript">
+			datos.push(function() {
+			});
+		</script>
+		<option></option>
+		<script type="text/javascript">
+			datos.push(function() {
+			});
+		</script>
+		<option>Exit</option>
+		<script type="text/javascript">
+			datos.push(exit_jnlp);
+		</script>
+	</select>
+	<input type="button" value="Ejecutar"
+		onClick="
+		console.log(document.getElementById('combo').selectedIndex);
+		datos[document.getElementById('combo').selectedIndex]();" />&nbsp;
+	<div id="resultado"></div>
+	<div>
+		<span>Consola</span> <br> <textarea id="console" cols="150"
+				rows="10">
 		 </textarea>
-		</div>
-		<div>
-			<span>Texto que se va a firmar</span> <br> <textarea
-					id="inputText" cols="150" rows="10"></textarea>
-		</div> <br />
+	</div>
+	<div>
+		<span>Entrada</span> <br> <textarea id="inputText" cols="150"
+				rows="10"></textarea>
+	</div>
+	<br />
 	<div>
 		<span>Salida</span> <br />
 		<textarea id="outputText" cols="150" rows="10"></textarea>
 	</div>
 	<br />
 	<div>
-		<span>Certificado base64</span> <br />
+		<span>Salida Adicional</span> <br />
 		<textarea id="pem" cols="150" rows="10"></textarea>
 	</div>
 	<div id="preloader">

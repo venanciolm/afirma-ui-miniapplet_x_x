@@ -163,11 +163,11 @@ InvokerSubject.prototype.remove = function(observer) {
 // MiniApplet.clienteFirma.getErrorMessage());
 //
 // echo : function ()
-// sign : function (dataB64, algorithm, format, params, successCallback,
-// errorCallback)
 // setStickySignatory : function (sticky)
 // getBase64FromText : function (plainText, charset)
 // getTextFromBase64 : function (dataB64, charset)
+// sign : function (dataB64, algorithm, format, params, successCallback,
+// errorCallback)
 // getMultiFileNameContentBase64 : function (title, extensions, description,
 // filePath)
 //
@@ -276,9 +276,6 @@ AfirmaClient.prototype.getPemCertificate = function() {
 AfirmaClient.prototype.setData = function(/* string */data) {
 	this._data = data;
 }
-AfirmaClient.prototype.addData = function(/* string */data) {
-	this._data = this._data + data;
-}
 AfirmaClient.prototype.getWrappedErrorCallback = function() {
 	var client = this;
 	return function(/* jqXHR */jqXHR,/* String */
@@ -291,67 +288,181 @@ AfirmaClient.prototype.getWrappedErrorCallback = function() {
 		}
 	}
 }
+AfirmaClient.prototype.exit = function() {
+	var client = this;
+	client._invoker.invoke(
+	/* String */"exit",
+	/* Any */undefined,
+	/* successCallback */client._successCallback,
+	/* errorCallback */client._errorCallback,
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */client._completeCallback);
+
+}
 //
 //
 // echo : function ()
 //
 AfirmaClient.prototype.echo = function() {
 	var client = this;
-	var cEcho = new AfirmaClient(this);
-	cEcho.setCommand("echo");
-	cEcho.invoke(undefined);
+	client._invoker.invoke(
+	/* String */"echo",
+	/* Any */undefined,
+	/* successCallback */client._successCallback,
+	/* errorCallback */client._errorCallback,
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */client._completeCallback);
 }
 //
 //
-// sign : function (dataB64, algorithm, format, params, successCallback,
-// errorCallback)
+// setStickySignatory : function (sticky)
 //
-AfirmaClient.prototype.sign = function(/* Any */parameters) {
+AfirmaClient.prototype.setStickySignatory = function(sticky) {
 	var client = this;
-	var cSign = new AfirmaClient(this);
-	client.setData("");
-	cSign.setSuccessCallback(function( /* Any */response,/* String */
+	var request = new Object();
+	request.sticky = sticky;
+	client._invoker.invoke(
+	/* String */"setStickySignatory",
+	/* Any */request,
+	/* successCallback */client._successCallback,
+	/* errorCallback */client._errorCallback,
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */client._completeCallback);
+}
+//
+//
+//
+// getRemainingData: function()
+//
+AfirmaClient.prototype.getRemainingData = function() {
+	var client = this;
+	var textResponse = new Object();
+	textResponse.error = -2;
+	textResponse.descError = "";
+	textResponse.time = "";
+	textResponse.id = -1;
+	textResponse.msg = "";
+	var innerSuccess = function( /* Any */response,/* String */
 	textStatus, /* jqXHR */jqXHR) {
+		textResponse.error = response.error;
+		textResponse.descError = response.descError;
+		textResponse.time = response.time;
+		textResponse.id = response.id;
+		if (client.EOF == response.msg) {
+
+		}
 		if (client.EOF != response.msg && 0 == response.error) {
-			client._data += response.msg;
-			response.msg = null;
-			cRemaining = new AfirmaClient(cSign);
-			cRemaining.setErrorCallback(client.getWrappedErrorCallback());
-			cRemaining.setBeforeSendCallback(undefined);
-			cRemaining.setCompleteCallback(undefined);
-			cRemaining.setCommand("getRemainingData");
-			cRemaining.invoke(undefined);
+			textResponse.msg = textResponse.msg + response.msg;
+			delete response.msg;
+			if (client.count == 30) {
+				if (client._errorCallback) {
+					client._errorCallback(textResponse, textStatus, jqXHR);
+				}
+				if (client._completeCallback) {
+					client._completeCallback(jqXHR, textStatus);
+				}
+				return;
+			}
+			client._invoker.invoke(
+			/* String */"getRemainingData",
+			/* Any */undefined,
+			/* successCallback */innerSuccess,
+			/* errorCallback */client.getWrappedErrorCallback(),
+			/* beforeSendCallback */undefined,
+			/* completeCallback */undefined);
 		} else if (0 != response.error) {
-			client.setData("");
-			if (client._successCallback) {
-				client._successCallback(response, textStatus, jqXHR);
+			if (client._errorCallback) {
+				client._errorCallback(textResponse, textStatus, jqXHR);
 			}
 			if (client._completeCallback) {
 				client._completeCallback(jqXHR, textStatus);
 			}
 		} else {
-			var dataB64 = client._data;
-			client.setData("");
-			var items = dataB64.split("|");
-			if (items.length == 2) {
-				response.msg = items[1];
-				response.pemCertificate = items[0];
-			} else {
-				response.msg = items[0];
-			}
 			if (client._successCallback) {
-				client._successCallback(response, textStatus, jqXHR);
+				client._successCallback(textResponse, textStatus, jqXHR);
 			}
 			if (client._completeCallback) {
 				client._completeCallback(jqXHR, textStatus);
 			}
 		}
-	});
-	cSign.setErrorCallback(client.getWrappedErrorCallback());
-	cSign.setBeforeSendCallback(client._beforeSendCallback);
-	cSign.setCompleteCallback(undefined);
-	cSign.setCommand("sign");
-	cSign.invoke(parameters);
+	};
+	client._invoker.invoke(
+	/* String */"getRemainingData",
+	/* Any */undefined,
+	/* successCallback */innerSuccess,
+	/* errorCallback */client.getWrappedErrorCallback(),
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */undefined);
+}
+//
+//
+// addData : function (dataB64)
+//
+AfirmaClient.prototype.addData = function(/* Any */parameters) {
+	var client = this;
+	client.setData(parameters.data);
+	var textResponse = new Object();
+	textResponse.error = -2;
+	textResponse.descError = "";
+	textResponse.time = "";
+	textResponse.id = -1;
+	var jqXHR = undefined;
+	var innerSuccess = function( /* Any */response,/* String */
+	textStatus, /* jqXHR */jqXHR) {
+		textResponse.error = response.error;
+		textResponse.descError = response.descError;
+		textResponse.time = response.time;
+		textResponse.id = response.id;
+		if (0 == response.error) {
+			var param = new Object();
+			if (client.getData().length > client.BUFFER_SIZE) {
+				param.data = client.getData().substring(0, client.BUFFER_SIZE);
+				client.setData(client.getData().substring(client.BUFFER_SIZE));
+			} else {
+				param.data = client.getData();
+				client.setData("");
+			}
+			if (param.data && "" != param.data) {
+				client._invoker.invoke(
+				/* String */"addData",
+				/* Any */param,
+				/* successCallback */innerSuccess,
+				/* errorCallback */client.getWrappedErrorCallback(),
+				/* beforeSendCallback */undefined,
+				/* completeCallback */undefined);
+			} else {
+				if (client._successCallback) {
+					client._successCallback(textResponse, textStatus, jqXHR);
+				}
+				if (client._completeCallback) {
+					client._completeCallback(jqXHR, textStatus);
+				}
+			}
+		} else if (0 != response.error) {
+			client.setData("");
+			if (client._errorCallback) {
+				client._errorCallback(responseText, textStatus, jqXHR);
+			}
+			if (client._completeCallback) {
+				client._completeCallback(jqXHR, textStatus);
+			}
+		}
+	}
+	var param = new Object();
+	if (client.getData().length > client.BUFFER_SIZE) {
+		param.data = client.getData().substring(0, client.BUFFER_SIZE);
+		client.setData(client.getData().substring(client.BUFFER_SIZE));
+	} else {
+		param.data = client.getData();
+		client.setData("");
+	}
+	client._invoker.invoke(
+	/* String */"addData",
+	/* Any */param,
+	/* successCallback */innerSuccess,
+	/* errorCallback */client.getWrappedErrorCallback(),
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */undefined);
 }
 //
 //
@@ -360,93 +471,77 @@ AfirmaClient.prototype.sign = function(/* Any */parameters) {
 AfirmaClient.prototype.getTextFromBase64 = function(/* Any */parameters) {
 	var client = this;
 	var textResponse = new Object();
-	textResponse.error = 0;
+	textResponse.error = -2;
 	textResponse.descError = "";
 	textResponse.time = "";
 	textResponse.id = -1;
 	textResponse.msg = "";
-	var jqXHR = undefined;
-	if (!(parameters && parameters.data && parameters.data.length > 0)) {
-		textResponse.error = -1;
-		textResponse.descError = "No data!";
-		if (client._errorCallback) {
-			client._errorCallback(textResponse, textResponse.descError, jqXHR);
-		}
-		if (client._completeCallback) {
-			client._completeCallback(jqXHR, textResponse.descError);
-		}
-		return;
-	}
-	var cB64 = new AfirmaClient(this);
-	cB64.setData(parameters.data);
-	cB64.setErrorCallback(client.getWrappedErrorCallback());
-	cB64.setBeforeSendCallback(client._beforeSendCallback);
-	cB64.setCompleteCallback(undefined);
-	cB64.setCommand("getTextFromBase64");
-	cB64.setSuccessCallback(function( /* Any */response,/* String */
+	var innerSuccess = function( /* Any */response,/* String */
 	textStatus, /* jqXHR */jqXHR) {
 		textResponse.error = response.error;
 		textResponse.descError = response.descError;
 		textResponse.time = response.time;
 		textResponse.id = response.id;
-		if (response.msg && response.msg.length > 0 && 0 == response.error) {
+		if (0 == response.error) {
 			var param = new Object();
 			param.charset = parameters.charset;
-			if (cB64.getData().length > cB64.BUFFER_SIZE) {
-				param.data = cB64.getData().substring(0, cB64.BUFFER_SIZE);
-				cB64.setData(cB64.getData().substring(cB64.BUFFER_SIZE));
-			} else {
-				param.data = cB64.getData();
-				cB64.setData("");
-			}
-			textResponse.error = response.error;
-			textResponse.descError = response.descError;
-			textResponse.time = response.time;
-			textResponse.id = response.id;
 			textResponse.msg = textResponse.msg + response.msg;
-			if ("" == param.data) {
+			if (client.getData().length > client.B64_BUFFER_SIZE) {
+				param.data = client.getData().substring(0,
+						client.B64_BUFFER_SIZE);
+				client.setData(client.getData().substring(
+						client.B64_BUFFER_SIZE));
+			} else {
+				param.data = client.getData();
+				client.setData("");
+			}
+			if (param.data && "" != param.data) {
+				client._invoker.invoke(
+				/* String */"getTextFromBase64",
+				/* Any */param,
+				/* successCallback */innerSuccess,
+				/* errorCallback */client.getWrappedErrorCallback(),
+				/* beforeSendCallback */undefined,
+				/* completeCallback */undefined);
+			} else {
 				if (client._successCallback) {
 					client._successCallback(textResponse, textStatus, jqXHR);
 				}
 				if (client._completeCallback) {
 					client._completeCallback(jqXHR, textStatus);
 				}
-			} else {
-				cB64.invoke(param);
 			}
 		} else if (0 != response.error) {
 			client.setData("");
-			responseText.msg = "";
 			if (client._errorCallback) {
 				client._errorCallback(responseText, textStatus, jqXHR);
 			}
 			if (client._completeCallback) {
 				client._completeCallback(jqXHR, textStatus);
 			}
-		} else {
-			textResponse.error = response.error;
-			textResponse.descError = response.descError;
-			textResponse.time = response.time;
-			textResponse.id = response.id;
-			textResponse.msg = textResponse.msg + response.msg;
-			if (client._successCallback) {
-				client._successCallback(textResponse, textStatus, jqXHR);
-			}
-			if (client._completeCallback) {
-				client._completeCallback(jqXHR, textStatus);
-			}
 		}
-	});
+	};
+	if (parameters && parameters.data) {
+		client.setData(parameters.data);
+	} else {
+		client.setData("");
+	}
 	var param = new Object();
 	param.charset = parameters.charset;
-	if (cB64.getData().length > cB64.BUFFER_SIZE) {
-		param.data = cB64.getData().substring(0, cB64.BUFFER_SIZE);
-		cB64.setData(cB64.getData().substring(cB64.BUFFER_SIZE));
+	if (client.getData().length > client.B64_BUFFER_SIZE) {
+		param.data = client.getData().substring(0, client.B64_BUFFER_SIZE);
+		client.setData(client.getData().substring(client.B64_BUFFER_SIZE));
 	} else {
-		param.data = cB64.getData();
-		cB64.setData("");
+		param.data = client.getData();
+		client.setData("");
 	}
-	cB64.invoke(param);
+	client._invoker.invoke(
+	/* String */"getTextFromBase64",
+	/* Any */param,
+	/* successCallback */innerSuccess,
+	/* errorCallback */client.getWrappedErrorCallback(),
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */undefined);
 }
 //
 //
@@ -455,53 +550,32 @@ AfirmaClient.prototype.getTextFromBase64 = function(/* Any */parameters) {
 AfirmaClient.prototype.getBase64FromText = function(/* Any */parameters) {
 	var client = this;
 	var textResponse = new Object();
-	textResponse.error = 0;
+	textResponse.error = -2;
 	textResponse.descError = "";
 	textResponse.time = "";
 	textResponse.id = -1;
 	textResponse.msg = "";
-	var jqXHR = undefined;
-	console.log(" > Los parámetros son: " + parameters);
-	console.log(" > La longitud es: " + parameters.plainText.length);
-	if (!(parameters && parameters.plainText && parameters.plainText.length > 0)) {
-		textResponse.error = -1;
-		textResponse.descError = "No data!";
-		if (client._errorCallback) {
-			client._errorCallback(textResponse, textResponse.descError, jqXHR);
-		}
-		if (client._completeCallback) {
-			client._completeCallback(jqXHR, textResponse.descError);
-		}
-		return;
-	}
-	var cB64 = new AfirmaClient(this);
-	cB64.setData(parameters.plainText);
-	console.log(" > La longitud es: " + cB64.getData().length);
-	cB64.setErrorCallback(client.getWrappedErrorCallback());
-	cB64.setBeforeSendCallback(client._beforeSendCallback);
-	cB64.setCompleteCallback(undefined);
-	cB64.setCommand("getBase64FromText");
-	cB64.setSuccessCallback(function( /* Any */response,/* String */
+	var innerSuccess = function( /* Any */response,/* String */
 	textStatus, /* jqXHR */jqXHR) {
 		textResponse.error = response.error;
 		textResponse.descError = response.descError;
 		textResponse.time = response.time;
 		textResponse.id = response.id;
 		if (response.msg && response.msg.length > 0 && 0 == response.error) {
+			textResponse.msg = textResponse.msg + response.msg;
 			var param = new Object();
 			param.charset = parameters.charset;
-			if (cB64.getData().length > cB64.B64_BUFFER_SIZE) {
-				param.plainText = cB64.getData().substring(0,
-						cB64.B64_BUFFER_SIZE);
-				cB64.setData(cB64.getData().substring(cB64.B64_BUFFER_SIZE));
+			if (client.getData().length > client.B64_BUFFER_SIZE) {
+				param.plainText = client.getData().substring(0,
+						client.B64_BUFFER_SIZE);
+				client.setData(client.getData().substring(
+						client.B64_BUFFER_SIZE));
 			} else {
-				param.plainText = cB64.getData();
-				cB64.setData("");
+				param.plainText = client.getData();
+				client.setData("");
 			}
-			textResponse.msg = textResponse.msg + response.msg;
-			response.msg = null;
+			delete response.msg;
 			if ("" == param.plainText) {
-				console.log("Invocando Success! "+textResponse.msg.length);
 				if (client._successCallback) {
 					client._successCallback(textResponse, textStatus, jqXHR);
 				}
@@ -509,8 +583,13 @@ AfirmaClient.prototype.getBase64FromText = function(/* Any */parameters) {
 					client._completeCallback(jqXHR, textStatus);
 				}
 			} else {
-				console.log("Invocando De nuevo " + param.plainText.length);
-				cB64.invoke(param);
+				client._invoker.invoke(
+				/* String */"getBase64FromText",
+				/* Any */param,
+				/* successCallback */innerSuccess,
+				/* errorCallback */client.getWrappedErrorCallback(),
+				/* beforeSendCallback */undefined,
+				/* completeCallback */undefined);
 			}
 		} else if (0 != response.error) {
 			client.setData("");
@@ -529,29 +608,98 @@ AfirmaClient.prototype.getBase64FromText = function(/* Any */parameters) {
 				client._completeCallback(jqXHR, textStatus);
 			}
 		}
-	});
+	};
+	if (parameters && parameters.plainText) {
+		client.setData(parameters.plainText);
+	} else {
+		client.setData("");
+	}
 	var param = new Object();
 	param.charset = parameters.charset;
-	if (cB64.getData().length > cB64.B64_BUFFER_SIZE) {
-		param.plainText = cB64.getData().substring(0, cB64.B64_BUFFER_SIZE);
-		cB64.setData(cB64.getData().substring(cB64.B64_BUFFER_SIZE));
+	if (client.getData().length > client.B64_BUFFER_SIZE) {
+		param.plainText = client.getData().substring(0, client.B64_BUFFER_SIZE);
+		client.setData(client.getData().substring(client.B64_BUFFER_SIZE));
 	} else {
-		param.plainText = cB64.getData();
-		cB64.setData("");
+		param.plainText = client.getData();
+		client.setData("");
 	}
-	cB64.invoke(param);
+	client._invoker.invoke(
+	/* String */"getBase64FromText",
+	/* Any */param,
+	/* successCallback */innerSuccess,
+	/* errorCallback */client.getWrappedErrorCallback(),
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */undefined);
 }
 //
 //
-// setStickySignatory : function (sticky)
+// sign : function (dataB64, algorithm, format, params, successCallback,
+// errorCallback)
 //
-AfirmaClient.prototype.setStickySignatory = function(sticky) {
-	var request = new Object();
-	request.sticky = sticky;
-	var client = this;
-	var cSticky = new AfirmaClient(this);
-	cSticky.setCommand("setStickySignatory");
-	cSticky.invoke(request);
+AfirmaClient.prototype.sign = function(/* Any */parameters) {
+	var client = new AfirmaClient(this);
+	var textResponse = new Object();
+	textResponse.error = -2;
+	textResponse.descError = "";
+	textResponse.time = "";
+	textResponse.id = -1;
+	textResponse.msg = "";
+	textResponse.pemCertificate = "";
+
+	var remainingCallback = function( /* Any */response,/* String */
+	textStatus, /* jqXHR */jqXHR) {
+		textResponse.error = response.error;
+		textResponse.descError = response.descError;
+		textResponse.time = response.time;
+		textResponse.id = response.id;
+		textResponse.msg = textResponse.msg + response.msg;
+		delete response.msg;
+		var items = textResponse.msg.split("|");
+		if (items.length == 2) {
+			textResponse.msg = items[1];
+			textResponse.pemCertificate = items[0];
+		} else {
+			textResponse.msg = items[0];
+		}
+		if (client._successCallback) {
+			client._successCallback(textResponse, textStatus, jqXHR);
+		}
+		if (client._completeCallback) {
+			client._completeCallback(jqXHR, textStatus);
+		}
+	};
+	var innerSucessCallback = function( /* Any */response,/* String */
+	textStatus, /* jqXHR */jqXHR) {
+		textResponse.error = response.error;
+		textResponse.descError = response.descError;
+		textResponse.time = response.time;
+		textResponse.id = response.id;
+		if (0 == response.error) {
+			textResponse.msg = response.msg;
+			delete response.msg;
+			var cRemaing = new AfirmaClient(client);
+			cRemaing.setBeforeSendCallback(undefined);
+			cRemaing.setCompleteCallback(undefined);
+			cRemaing.setErrorCallback(client.getWrappedErrorCallback());
+			cRemaing.setSuccessCallback(remainingCallback);
+			cRemaing.getRemainingData();
+		} else {
+			responseText.msg = "";
+			if (client._errorCallback) {
+				client._errorCallback(textResponse, textStatus, jqXHR);
+			}
+			if (client._completeCallback) {
+				client._completeCallback(jqXHR, textStatus);
+			}
+		}
+	};
+	client._invoker.invoke(
+	/* String */"sign",
+	/* Any */parameters,
+	/* successCallback */innerSucessCallback,
+	/* errorCallback */client.getWrappedErrorCallback(),
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */undefined);
 }
 //
 //
@@ -559,52 +707,65 @@ AfirmaClient.prototype.setStickySignatory = function(sticky) {
 // filePath)
 //
 AfirmaClient.prototype.getFileNameContentBase64 = function(/* Any */parameters) {
-	var client = this;
-	var cFile = new AfirmaClient(this);
-	client.setData("");
-	cFile.setSuccessCallback(function( /* Any */response,/* String */
+	var client = new AfirmaClient(this);
+	var textResponse = new Object();
+	textResponse.error = -2;
+	textResponse.descError = "";
+	textResponse.time = "";
+	textResponse.id = -1;
+	textResponse.msg = "";
+	textResponse.fileName = "";
+
+	var remainingCallback = function( /* Any */response,/* String */
 	textStatus, /* jqXHR */jqXHR) {
-		if (client.EOF != response.msg && 0 == response.error) {
-			client._data += response.msg;
-			response.msg = null;
-			cRemaining = new AfirmaClient(cFile);
-			cRemaining.setCommand("getRemainingData");
-			cRemaining.setSuccessCallback(cFile._successCallback);
-			cRemaining.setErrorCallback(client.getWrappedErrorCallback());
-			cRemaining.setBeforeSendCallback(client._beforeSendCallback);
-			cRemaining.setCompleteCallback(undefined);
-			cRemaining.invoke(undefined);
-		} else if (0 != response.error) {
-			client.setData("");
-			if (client._successCallback) {
-				client._successCallback(response, textStatus, jqXHR);
-			}
-			if (client._completeCallback) {
-				client._completeCallback(jqXHR, textStatus);
-			}
+		textResponse.error = response.error;
+		textResponse.descError = response.descError;
+		textResponse.time = response.time;
+		textResponse.id = response.id;
+		textResponse.msg = textResponse.msg + response.msg;
+		delete response.msg;
+		var items = textResponse.msg.split("|");
+		textResponse.fileName = items[0];
+		textResponse.msg = items[1];
+		if (client._successCallback) {
+			client._successCallback(textResponse, textStatus, jqXHR);
+		}
+		if (client._completeCallback) {
+			client._completeCallback(jqXHR, textStatus);
+		}
+	};
+	var innerSucessCallback = function( /* Any */response,/* String */
+	textStatus, /* jqXHR */jqXHR) {
+		textResponse.error = response.error;
+		textResponse.descError = response.descError;
+		textResponse.time = response.time;
+		textResponse.id = response.id;
+		if (0 == response.error) {
+			textResponse.msg = response.msg;
+			delete response.msg;
+			var cRemaing = new AfirmaClient(client);
+			cRemaing.setBeforeSendCallback(undefined);
+			cRemaing.setCompleteCallback(undefined);
+			cRemaing.setErrorCallback(client.getWrappedErrorCallback());
+			cRemaing.setSuccessCallback(remainingCallback);
+			cRemaing.getRemainingData();
 		} else {
-			var dataB64 = client._data;
-			client.setData("");
-			var items = dataB64.split("|");
-			if (items.length == 2) {
-				response.msg = items[1];
-				response.fileName = items[0];
-			} else {
-				response.msg = items[0];
-			}
-			if (client._successCallback) {
-				client._successCallback(response, textStatus, jqXHR);
+			responseText.msg = "";
+			if (client._errorCallback) {
+				client._errorCallback(textResponse, textStatus, jqXHR);
 			}
 			if (client._completeCallback) {
 				client._completeCallback(jqXHR, textStatus);
 			}
 		}
-	});
-	cFile.setErrorCallback(client.getWrappedErrorCallback());
-	cFile.setBeforeSendCallback(client._beforeSendCallback);
-	cFile.setCompleteCallback(undefined);
-	cFile.setCommand("getFileNameContentBase64");
-	cFile.invoke(parameters);
+	};
+	client._invoker.invoke(
+	/* String */"getFileNameContentBase64",
+	/* Any */parameters,
+	/* successCallback */innerSucessCallback,
+	/* errorCallback */client.getWrappedErrorCallback(),
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */undefined);
 }
 AfirmaClient.prototype.signMsg = function(/* String */textPlain,/* Any */
 parameters,/* String */charset) {
