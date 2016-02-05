@@ -45,19 +45,65 @@
 				alert("Seleccione!")
 			});
 		</script>
-		<option>echo</option>
+		<option>@firma.echo</option>
 		<script type="text/javascript">
-			datos.push(echo);
+			datos.push(function() {
+				var c = new AfirmaClient(pageClient);
+				var scb = function(/* Anything */response, /* String */
+				textStatus, /* jqXHR */
+				jqXHR) {
+					if (pageClient._successCallback) {
+						pageClient
+								._successCallback(response, textStatus, jqXHR);
+					}
+					$("#outputText").val(response.msg);
+					$("#pem").val('');
+				};
+				c.setSuccessCallback(scb);
+				c.echo();
+			});
 		</script>
-		<option>getBase64FromText</option>
+		<option>@firma.setStickySignatory(true)</option>
 		<script type="text/javascript">
-			datos.push(getBase64FromText);
+			datos.push(function() {
+				var c = new AfirmaClient(pageClient);
+				var scb = function(/* Anything */response, /* String */
+				textStatus, /* jqXHR */
+				jqXHR) {
+					if (pageClient._successCallback) {
+						pageClient
+								._successCallback(response, textStatus, jqXHR);
+					}
+					$("#outputText").val(response.msg);
+					$("#pem").val('');
+				};
+				c.setSuccessCallback(scb);
+				var param = new Object();
+				param.sticky = true;
+				c.setStickySignatory(param);
+			});
 		</script>
-		<option>getTextFromBase64</option>
+		<option>@firma.setStickySignatory(false)</option>
 		<script type="text/javascript">
-			datos.push(getTextFromBase64);
+			datos.push(function() {
+				var c = new AfirmaClient(pageClient);
+				var scb = function(/* Anything */response, /* String */
+				textStatus, /* jqXHR */
+				jqXHR) {
+					if (pageClient._successCallback) {
+						pageClient
+								._successCallback(response, textStatus, jqXHR);
+					}
+					$("#outputText").val(response.msg);
+					$("#pem").val('');
+				};
+				c.setSuccessCallback(scb);
+				var param = new Object();
+				param.sticky = false;
+				c.setStickySignatory(param);
+			});
 		</script>
-		<option>getFileNameContentBase64</option>
+		<option>@firma.getFileNameContentBase64</option>
 		<script type="text/javascript">
 			datos.push(function() {
 				var params = new Object();
@@ -76,7 +122,7 @@
 				c.getFileNameContentBase64(params);
 			});
 		</script>
-		<option>getMultiFileNameContentBase64</option>
+		<option>@firma.getMultiFileNameContentBase64</option>
 		<script type="text/javascript">
 			datos.push(function() {
 				var params = new Object();
@@ -106,7 +152,7 @@
 				c.getMultiFileNameContentBase64(params);
 			});
 		</script>
-		<option>getErrorMessage</option>
+		<option>@firma.getErrorMessage</option>
 		<script type="text/javascript">
 			datos.push(function() {
 				var c = new AfirmaClient(pageClient);
@@ -119,7 +165,7 @@
 				c.getErrorMessage();
 			});
 		</script>
-		<option>getErrorType</option>
+		<option>@firma.getErrorType</option>
 		<script type="text/javascript">
 			datos.push(function() {
 				var c = new AfirmaClient(pageClient);
@@ -132,7 +178,7 @@
 				c.getErrorType();
 			});
 		</script>
-		<option>getCurrentLog</option>
+		<option>@firma.getCurrentLog</option>
 		<script type="text/javascript">
 			datos.push(function() {
 				var c = new AfirmaClient(pageClient);
@@ -145,19 +191,111 @@
 				c.getCurrentLog();
 			});
 		</script>
-		<option>Firmar/File</option>
+		<option>@firma.sign</option>
 		<script type="text/javascript">
-			datos.push(signFile);
+			datos
+					.push(function() {
+						var invoker = new AfirmaClient(pageClient);
+						var successCB = function(/* Anything */response, /* String */
+						textStatus, /* jqXHR */
+						jqXHR) {
+							if (pageClient._successCallback) {
+								pageClient._successCallback(response,
+										textStatus, jqXHR);
+							}
+							$("#outputText").val(response.msg);
+							$("#pem").val(response.pemCertificate);
+						};
+						invoker.setSuccessCallback(successCB);
+						var item = new Object();
+						item.algorithm = 'SHA512withRSA';
+						item.format = 'XAdES';
+						item.extraParams = 'format=XAdES Detached\nfilters.1=signingCert:;nonexpired:';
+						invoker.sign(item);
+					});
 		</script>
-		<option>Firmar/FileByName</option>
+		<option>@firma-jnlp.getBase64FromText</option>
+		<script type="text/javascript">
+			datos.push(function() {
+				var invoker = new AfirmaClient(pageClient);
+				var successCB = function(/* Anything */response, /* String */
+				textStatus, /* jqXHR */
+				jqXHR) {
+					if (pageClient._successCallback) {
+						pageClient
+								._successCallback(response, textStatus, jqXHR);
+					}
+					$("#outputText").val(response.msg);
+					$("#pem").val('');
+				};
+				invoker.setSuccessCallback(successCB);
+				var item = new Object();
+				item.plainText = $("#inputText").val();
+				item.charset = "default";
+				invoker.getBase64FromText(item);
+			});
+		</script>
+		<option>@firma-jnlp.getTextFromBase64</option>
+		<script type="text/javascript">
+			datos.push(function() {
+				var invoker = new AfirmaClient(pageClient);
+				var successCB = function(/* Anything */response, /* String */
+				textStatus, /* jqXHR */
+				jqXHR) {
+					if (pageClient._successCallback) {
+						pageClient
+								._successCallback(response, textStatus, jqXHR);
+					}
+					$("#outputText").val(response.msg);
+					$("#pem").val('');
+				};
+				invoker.setSuccessCallback(successCB);
+				var item = new Object();
+				item.data = $("#inputText").val();
+				item.charset = "default";
+				invoker.getTextFromBase64(item);
+			});
+		</script>
+		<option>Ejemplo::saveDataToFile</option>
+		<script type="text/javascript">
+			datos.push(function() {
+				var c = new AfirmaClient(pageClient);
+				c.setBeforeSendCallback(undefined);
+				var preC = new AfirmaClient(pageClient);
+				var scb = function(/* Anything */response, /* String */
+				textStatus, /* jqXHR */
+				jqXHR) {
+					$("#outputText").val(response.msg);
+					$("#pem").val('');
+				}
+				var preScb = function(/* Anything */response, /* String */
+				textStatus, /* jqXHR */
+				jqXHR) {
+					var params = new Object();
+					params.title = "Guarde fichero";
+					params.fileName = "sample.txt";
+					params.extension = "txt"
+					params.description = undefined;
+					c.saveDataToFile(params);
+				}
+				c.setSuccessCallback(scb);
+				var preParams = new Object();
+				preParams.data = $("#inputText").val();
+				preC.setErrorCallback(pageClient.getWrappedErrorCallback());
+				preC.setCompleteCallback(undefined);
+				preC.setSuccessCallback(preScb);
+				preC.addData(preParams);
+			});
+		</script>
+		<option>Ejemplo:Firmar/FileByName</option>
 		<script type="text/javascript">
 			datos.push(signFile2p);
 		</script>
-		<option>Firmar plano</option>
+		<option>Ejemplo:Firmar plano</option>
 		<script type="text/javascript">
 			datos.push(signMsg);
 		</script>
-		<option>Firmar base64</option>
+		<option>Ejemplo:Firmar base64</option>
 		<script type="text/javascript">
 			datos.push(signBase64);
 		</script>
@@ -166,9 +304,23 @@
 			datos.push(function() {
 			});
 		</script>
-		<option>Exit</option>
+		<option>@firma-jnlp.exit</option>
 		<script type="text/javascript">
-			datos.push(exit_jnlp);
+			datos.push(function() {
+				var invoker = new AfirmaClient(pageClient);
+				var successCB = function(/* Anything */response, /* String */
+				textStatus, /* jqXHR */
+				jqXHR) {
+					if (pageClient._successCallback) {
+						pageClient
+								._successCallback(response, textStatus, jqXHR);
+					}
+					$("#outputText").val('');
+					$("#pem").val('');
+				};
+				invoker.setSuccessCallback(successCB);
+				invoker.exit();
+			});
 		</script>
 	</select>
 	<input type="button" value="Ejecutar"

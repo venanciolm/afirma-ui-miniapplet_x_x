@@ -799,10 +799,10 @@ AfirmaClient.prototype.getFileNameContentBase64 = function(/* Any */parameters) 
 			textResponse.msg = response.msg;
 			delete response.msg;
 			var cRemaing = new AfirmaClient(client);
-			cRemaing.setBeforeSendCallback(undefined);
-			cRemaing.setCompleteCallback(undefined);
 			cRemaing.setErrorCallback(client.getWrappedErrorCallback());
 			cRemaing.setSuccessCallback(remainingCallback);
+			cRemaing.setBeforeSendCallback(undefined);
+			cRemaing.setCompleteCallback(undefined);
 			cRemaing.getRemainingData();
 		} else {
 			responseText.msg = "";
