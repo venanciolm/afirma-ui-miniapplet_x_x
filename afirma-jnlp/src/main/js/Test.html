@@ -47,9 +47,7 @@
 		</script>
 		<option>echo</option>
 		<script type="text/javascript">
-			datos.push(function() {
-				pageClient.echo()
-			});
+			datos.push(echo);
 		</script>
 		<option>getBase64FromText</option>
 		<script type="text/javascript">
@@ -58,6 +56,94 @@
 		<option>getTextFromBase64</option>
 		<script type="text/javascript">
 			datos.push(getTextFromBase64);
+		</script>
+		<option>getFileNameContentBase64</option>
+		<script type="text/javascript">
+			datos.push(function() {
+				var params = new Object();
+				params.title = "Seleccione fichero:";
+				params.extensions = "pdf,zip,odt,ini,rtf,doc,docx";
+				params.description = undefined;
+				params.filePath = undefined;
+				var c = new AfirmaClient(pageClient);
+				var scb = function(/* Anything */response, /* String */
+				textStatus, /* jqXHR */
+				jqXHR) {
+					$("#outputText").val(response.msg);
+					$("#pem").val(response.fileName);
+				}
+				c.setSuccessCallback(scb);
+				c.getFileNameContentBase64(params);
+			});
+		</script>
+		<option>getMultiFileNameContentBase64</option>
+		<script type="text/javascript">
+			datos.push(function() {
+				var params = new Object();
+				params.title = "Seleccione fichero:";
+				params.extensions = "pdf,zip,odt,ini,rtf,doc,docx";
+				params.description = undefined;
+				params.filePath = undefined;
+				var c = new AfirmaClient(pageClient);
+				var scb = function(/* Anything */response, /* String */
+				textStatus, /* jqXHR */
+				jqXHR) {
+					$("#outputText").val("");
+					$("#pem").val("");
+					for (i = 0; i < response.fileNames.length; i++) {
+						$("#outputText").val(
+								$("#outputText").val() + "\n>file: "
+										+ response.fileNames[i]);
+						$("#outputText").val(
+								$("#outputText").val() + "\n"
+										+ response.msgs[i]);
+						$("#pem").val(
+								$("#pem").val() + "\n file: "
+										+ response.fileNames[i]);
+					}
+				}
+				c.setSuccessCallback(scb);
+				c.getMultiFileNameContentBase64(params);
+			});
+		</script>
+		<option>getErrorMessage</option>
+		<script type="text/javascript">
+			datos.push(function() {
+				var c = new AfirmaClient(pageClient);
+				var scb = function(/* Anything */response, /* String */
+				textStatus, /* jqXHR */jqXHR) {
+					$("#outputText").val(response.msg);
+					$("#pem").val("");
+				}
+				c.setSuccessCallback(scb);
+				c.getErrorMessage();
+			});
+		</script>
+		<option>getErrorType</option>
+		<script type="text/javascript">
+			datos.push(function() {
+				var c = new AfirmaClient(pageClient);
+				var scb = function(/* Anything */response, /* String */
+				textStatus, /* jqXHR */jqXHR) {
+					$("#outputText").val(response.msg);
+					$("#pem").val("");
+				}
+				c.setSuccessCallback(scb);
+				c.getErrorType();
+			});
+		</script>
+		<option>getCurrentLog</option>
+		<script type="text/javascript">
+			datos.push(function() {
+				var c = new AfirmaClient(pageClient);
+				var scb = function(/* Anything */response, /* String */
+				textStatus, /* jqXHR */jqXHR) {
+					$("#outputText").val(response.msg);
+					$("#pem").val("");
+				}
+				c.setSuccessCallback(scb);
+				c.getCurrentLog();
+			});
 		</script>
 		<option>Firmar/File</option>
 		<script type="text/javascript">
@@ -74,11 +160,6 @@
 		<option>Firmar base64</option>
 		<script type="text/javascript">
 			datos.push(signBase64);
-		</script>
-		<option></option>
-		<script type="text/javascript">
-			datos.push(function() {
-			});
 		</script>
 		<option></option>
 		<script type="text/javascript">

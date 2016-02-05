@@ -162,6 +162,7 @@ InvokerSubject.prototype.remove = function(observer) {
 // errorCallback(MiniApplet.clienteFirma.getErrorType(),
 // MiniApplet.clienteFirma.getErrorMessage());
 //
+// setLocale : function (locale)
 // echo : function ()
 // setStickySignatory : function (sticky)
 // getBase64FromText : function (plainText, charset)
@@ -170,34 +171,36 @@ InvokerSubject.prototype.remove = function(observer) {
 // errorCallback)
 // getFileNameContentBase64 : function (title, extensions, description,
 // filePath)
-//
-// cargarMiniApplet : function (base, keystore)
 // checkTime : function (checkType, maxMillis)
+// saveDataToFile : function (dataB64, title, fileName, extension, description)
+// getMultiFileNameContentBase64 : function (title, extensions, description,
+// filePath)
+// getErrorMessage : function ()
+// getErrorType : function ()
+// getCurrentLog : function ()
+//
 // coSign : function (signB64, dataB64, algorithm, format, params,
 // successCallback, errorCallback)
 // counterSign : function (signB64, algorithm, format, params, successCallback,
 // errorCallback)
-// saveDataToFile : function (dataB64, title, fileName, extension, description)
-// setLocale : function (locale)
-// getErrorMessage : function ()
-// getErrorType : function ()
-// getCurrentLog : function ()
+// cargarMiniApplet : function (base, keystore)
 // setServlets : function (storageServlet, retrieverServlet) {
-// getMultiFileNameContentBase64 : function (title, extensions, description,
-// filePath)
 //
 var AfirmaClient = function(/* AfirmaClient */parent) {
-	this._command;
+	this._command; /* to remove */
 	this._invoker;
 	this._successCallback;
 	this._errorCallback;
 	this._beforeSendCallback;
 	this._completeCallback;
+	this.selectedLocale;
 	this.BUFFER_SIZE = 1024 * 1024;
 	this.B64_BUFFER_SIZE = this.BUFFER_SIZE * 3 / 4;
 	this.EOF = "%%EOF%%";
+	this.CHECKTIME_NO = "CT_NO";
+	this.CHECKTIME_RECOMMENDED = "CT_RECOMMENDED";
+	this.CHECKTIME_OBLIGATORY = "CT_OBLIGATORY";
 	this._data;
-	this._pemCertificate;
 	this._root = parent;
 	var root = this._root;
 	while (root) {
@@ -272,9 +275,6 @@ AfirmaClient.prototype.invoke = function( /* Any */parameters) {
 AfirmaClient.prototype.getData = function() {
 	return this._data;
 }
-AfirmaClient.prototype.getPemCertificate = function() {
-	return this._pemCertificate;
-}
 AfirmaClient.prototype.setData = function(/* string */data) {
 	this._data = data;
 }
@@ -299,7 +299,57 @@ AfirmaClient.prototype.exit = function() {
 	/* errorCallback */client._errorCallback,
 	/* beforeSendCallback */client._beforeSendCallback,
 	/* completeCallback */client._completeCallback);
+}
+//
+//
+// setLocale : function (locale)
+//
+AfirmaClient.prototype.setLocale = function(locale) {
+	this.selectedLocale = locale;
+}
+//
+//
+// checkTime : function (checkType, maxMillis)
+//
+AfirmaClient.prototype.checkTime = function(checkType, maxMillis) {
 
+	if (checkType == undefined || checkType == null
+			|| checkType == this.CHECKTIME_NO || maxMillis == undefined
+			|| maxMillis == null || maxMillis <= 0) {
+		return;
+	}
+
+	// Hacemos una llamada al servidor para conocer su hora
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', document.URL + '/' + Math.random(), false);
+	xhr.send();
+
+	// Recogemos la hora local, nada mas obtener la respuesta del servidor
+	var clientDate = new Date();
+
+	// Tomamos la hora a partir de la respuesta del servidor. Si esta es 0,
+	// estamos en local
+	var serverDate = new Date(xhr.getResponseHeader("Date"));
+	if (serverDate == null || serverDate.getTime() == 0) {
+		// No hacemos nada si estamos en local
+		return;
+	}
+
+	var delay = Math.abs(clientDate.getTime() - serverDate.getTime());
+	if (delay > maxMillis) {
+		if (checkType == this.CHECKTIME_RECOMMENDED) {
+			alert("Se ha detectado un desfase horario entre su sistema y el servidor. Se recomienda que se corrija antes de pulsar Aceptar para continuar."
+					+ "\nHora de su sistema: "
+					+ clientDate.toLocaleString()
+					+ "\nHora del servidor: " + serverDate.toLocaleString());
+		} else if (checkType == this.CHECKTIME_OBLIGATORY) {
+			MiniApplet.severeTimeDelay = true;
+			alert("Se ha detectado un desfase horario entre su sistema y el servidor. Debe corregir la hora de su sistema antes de continuar."
+					+ "\nHora de su sistema: "
+					+ clientDate.toLocaleString()
+					+ "\nHora del servidor: " + serverDate.toLocaleString());
+		}
+	}
 }
 //
 //
@@ -639,7 +689,7 @@ AfirmaClient.prototype.getBase64FromText = function(/* Any */parameters) {
 // errorCallback)
 //
 AfirmaClient.prototype.sign = function(/* Any */parameters) {
-	var client = new AfirmaClient(this);
+	var client = this;
 	var textResponse = new Object();
 	textResponse.error = -2;
 	textResponse.descError = "";
@@ -709,7 +759,7 @@ AfirmaClient.prototype.sign = function(/* Any */parameters) {
 // filePath)
 //
 AfirmaClient.prototype.getFileNameContentBase64 = function(/* Any */parameters) {
-	var client = new AfirmaClient(this);
+	var client = this;
 	var textResponse = new Object();
 	textResponse.error = -2;
 	textResponse.descError = "";
@@ -729,6 +779,9 @@ AfirmaClient.prototype.getFileNameContentBase64 = function(/* Any */parameters) 
 		var items = textResponse.msg.split("|");
 		textResponse.fileName = items[0];
 		textResponse.msg = items[1];
+		delete items[0];
+		delete items[1];
+		delete items;
 		if (client._successCallback) {
 			client._successCallback(textResponse, textStatus, jqXHR);
 		}
@@ -768,6 +821,122 @@ AfirmaClient.prototype.getFileNameContentBase64 = function(/* Any */parameters) 
 	/* errorCallback */client.getWrappedErrorCallback(),
 	/* beforeSendCallback */client._beforeSendCallback,
 	/* completeCallback */undefined);
+}
+//
+//
+// saveDataToFile : function (dataB64, title, fileName, extension, description)
+//
+AfirmaClient.prototype.saveDataToFile = function(/* Any */parameters) {
+	var client = this;
+	client._invoker.invoke(
+	/* String */"saveDataToFile",
+	/* Any */parameters,
+	/* successCallback */client._successCallback,
+	/* errorCallback */client._errorCallback,
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */client._completeCallback);
+}
+//
+//
+// getMultiFileNameContentBase64 : function (title, extensions, description,
+// filePath)
+//
+AfirmaClient.prototype.getMultiFileNameContentBase64 = function(
+/* Any */parameters) {
+	var client = this;
+	var textResponse = new Object();
+	textResponse.error = -2;
+	textResponse.descError = "";
+	textResponse.time = "";
+	textResponse.id = -1;
+	textResponse.msgs = [];
+	textResponse.fileNames = [];
+
+	var innerSucessCallback = function( /* Any */response,/* String */
+	textStatus, /* jqXHR */jqXHR) {
+		textResponse.error = response.error;
+		textResponse.descError = response.descError;
+		textResponse.time = response.time;
+		textResponse.id = response.id;
+		if (0 == response.error) {
+			for (index = 0; index < response.msgs.length; index++) {
+				var items = response.msgs[index].split("|");
+				textResponse.fileNames[index] = items[0];
+				textResponse.msgs[index] = items[1];
+				delete response.msgs[index];
+				delete items[0];
+				delete items[1];
+				delete items;
+
+			}
+			delete response.msgs;
+			if (client._successCallback) {
+				client._successCallback(textResponse, textStatus, jqXHR);
+			}
+			if (client._completeCallback) {
+				client._completeCallback(jqXHR, textStatus);
+			}
+		} else {
+			responseText.msgs = [];
+			responseText.fileNames = [];
+			if (client._errorCallback) {
+				client._errorCallback(textResponse, textStatus, jqXHR);
+			}
+			if (client._completeCallback) {
+				client._completeCallback(jqXHR, textStatus);
+			}
+		}
+	};
+	client._invoker.invoke(
+	/* String */"getMultiFileNameContentBase64",
+	/* Any */parameters,
+	/* successCallback */innerSucessCallback,
+	/* errorCallback */client.getWrappedErrorCallback(),
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */undefined);
+}
+//
+//
+// getErrorMessage : function ()
+//
+AfirmaClient.prototype.getErrorMessage = function() {
+	var client = this;
+	client._invoker.invoke(
+	/* String */"getErrorMessage",
+	/* Any */undefined,
+	/* successCallback */client._successCallback,
+	/* errorCallback */client._errorCallback,
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */client._completeCallback);
+}
+//
+//
+// getErrorType : function ()
+//
+AfirmaClient.prototype.getErrorType = function() {
+	var client = this;
+	client._invoker.invoke(
+	/* String */"getErrorType",
+	/* Any */undefined,
+	/* successCallback */client._successCallback,
+	/* errorCallback */client._errorCallback,
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */client._completeCallback);
+
+}
+//
+//
+// getCurrentLog : function ()
+//
+AfirmaClient.prototype.getCurrentLog = function() {
+	var client = this;
+	client._invoker.invoke(
+	/* String */"getCurrentLog",
+	/* Any */undefined,
+	/* successCallback */client._successCallback,
+	/* errorCallback */client._errorCallback,
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */client._completeCallback);
 }
 AfirmaClient.prototype.signMsg = function(/* String */textPlain,/* Any */
 parameters,/* String */charset) {
