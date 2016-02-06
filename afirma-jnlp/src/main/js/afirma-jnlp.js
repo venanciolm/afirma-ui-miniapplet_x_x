@@ -169,6 +169,8 @@ InvokerSubject.prototype.remove = function(observer) {
 // getTextFromBase64 : function (dataB64, charset)
 // sign : function (dataB64, algorithm, format, params, successCallback,
 // errorCallback)
+// counterSign : function (signB64, algorithm, format, params, successCallback,
+// errorCallback)
 // getFileNameContentBase64 : function (title, extensions, description,
 // filePath)
 // checkTime : function (checkType, maxMillis)
@@ -181,8 +183,6 @@ InvokerSubject.prototype.remove = function(observer) {
 //
 // coSign : function (signB64, dataB64, algorithm, format, params,
 // successCallback, errorCallback)
-// counterSign : function (signB64, algorithm, format, params, successCallback,
-// errorCallback)
 // cargarMiniApplet : function (base, keystore)
 // setServlets : function (storageServlet, retrieverServlet) {
 //
@@ -747,6 +747,76 @@ AfirmaClient.prototype.sign = function(/* Any */parameters) {
 	};
 	client._invoker.invoke(
 	/* String */"sign",
+	/* Any */parameters,
+	/* successCallback */innerSucessCallback,
+	/* errorCallback */client.getWrappedErrorCallback(),
+	/* beforeSendCallback */client._beforeSendCallback,
+	/* completeCallback */undefined);
+}
+//
+//
+// counterSign : function (signB64, algorithm, format, params, successCallback,
+// errorCallback)
+//
+AfirmaClient.prototype.counterSign = function(/* Any */parameters) {
+	var client = this;
+	var textResponse = new Object();
+	textResponse.error = -2;
+	textResponse.descError = "";
+	textResponse.time = "";
+	textResponse.id = -1;
+	textResponse.msg = "";
+	textResponse.pemCertificate = "";
+
+	var remainingCallback = function( /* Any */response,/* String */
+	textStatus, /* jqXHR */jqXHR) {
+		textResponse.error = response.error;
+		textResponse.descError = response.descError;
+		textResponse.time = response.time;
+		textResponse.id = response.id;
+		textResponse.msg = textResponse.msg + response.msg;
+		delete response.msg;
+		var items = textResponse.msg.split("|");
+		if (items.length == 2) {
+			textResponse.msg = items[1];
+			textResponse.pemCertificate = items[0];
+		} else {
+			textResponse.msg = items[0];
+		}
+		if (client._successCallback) {
+			client._successCallback(textResponse, textStatus, jqXHR);
+		}
+		if (client._completeCallback) {
+			client._completeCallback(jqXHR, textStatus);
+		}
+	};
+	var innerSucessCallback = function( /* Any */response,/* String */
+	textStatus, /* jqXHR */jqXHR) {
+		textResponse.error = response.error;
+		textResponse.descError = response.descError;
+		textResponse.time = response.time;
+		textResponse.id = response.id;
+		if (0 == response.error) {
+			textResponse.msg = response.msg;
+			delete response.msg;
+			var cRemaing = new AfirmaClient(client);
+			cRemaing.setBeforeSendCallback(undefined);
+			cRemaing.setCompleteCallback(undefined);
+			cRemaing.setErrorCallback(client.getWrappedErrorCallback());
+			cRemaing.setSuccessCallback(remainingCallback);
+			cRemaing.getRemainingData();
+		} else {
+			responseText.msg = "";
+			if (client._errorCallback) {
+				client._errorCallback(textResponse, textStatus, jqXHR);
+			}
+			if (client._completeCallback) {
+				client._completeCallback(jqXHR, textStatus);
+			}
+		}
+	};
+	client._invoker.invoke(
+	/* String */"counterSign",
 	/* Any */parameters,
 	/* successCallback */innerSucessCallback,
 	/* errorCallback */client.getWrappedErrorCallback(),

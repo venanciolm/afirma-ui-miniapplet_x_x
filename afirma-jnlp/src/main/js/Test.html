@@ -214,6 +214,29 @@
 						invoker.sign(item);
 					});
 		</script>
+		<option>@firma.counterSign</option>
+		<script type="text/javascript">
+			datos
+					.push(function() {
+						var invoker = new AfirmaClient(pageClient);
+						var successCB = function(/* Anything */response, /* String */
+						textStatus, /* jqXHR */
+						jqXHR) {
+							if (pageClient._successCallback) {
+								pageClient._successCallback(response,
+										textStatus, jqXHR);
+							}
+							$("#outputText").val(response.msg);
+							$("#pem").val(response.pemCertificate);
+						};
+						invoker.setSuccessCallback(successCB);
+						var item = new Object();
+						item.algorithm = 'SHA512withRSA';
+						item.format = 'XAdES';
+						item.extraParams = 'format=XAdES Detached\nfilters.1=signingCert:;nonexpired:';
+						invoker.counterSign(item);
+					});
+		</script>
 		<option>@firma-jnlp.getBase64FromText</option>
 		<script type="text/javascript">
 			datos.push(function() {
