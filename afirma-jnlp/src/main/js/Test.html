@@ -3,10 +3,9 @@
 <head runat="server">
 <title>Sample Page</title>
 <meta http-equiv="X-UA-Compatible" content="IE=edge;chrome=1" />
-<link rel="shortcut icon" type="image/png" href="/favicon.ico" />
+<link rel="shortcut icon" type="image/png" href="favicon.ico" />
 <script type="text/javascript" src="jquery-1.11.3.min.js"></script>
 <script type="text/javascript" src="afirma-jnlp.js"></script>
-<script type="text/javascript" src="test.js"></script>
 <style>
 #preloader {
 	display: none;
@@ -37,6 +36,7 @@
 	<script type="text/javascript">
 		var datos = [];
 		var pageClient = new AfirmaClient();
+		pageClient.checkTime(pageClient.CHECKTIME_OBLIGATORY, 1000);
 		pageClient.setBeforeSendCallback(function(
 		/* jqXHR */jqXHR,
 		/* PlainObject */settings) {
@@ -398,15 +398,92 @@
 		</script>
 		<option>Ejemplo:Firmar/FileByName</option>
 		<script type="text/javascript">
-			datos.push(signFile2p);
-		</script>
-		<option>Ejemplo:Firmar plano</option>
-		<script type="text/javascript">
-			datos.push(signMsg);
-		</script>
-		<option>Ejemplo:Firmar base64</option>
-		<script type="text/javascript">
-			datos.push(signBase64);
+			datos
+					.push(function() {
+						var fileName = "";
+						var cSign = new AfirmaClient(pageClient);
+						cSign.setBeforeSendCallback(undefined);
+						var signCB = function(/* Anything */response, /* String */
+						textStatus, /* jqXHR */
+						jqXHR) {
+							$("#outputText").val(response.msg);
+							$("#pem").val(
+									$('#pem').val() + response.pemCertificate);
+							if (pageClient._successCallback) {
+								pageClient._successCallback(response,
+										textStatus, jqXHR);
+							}
+							delete response.msg;
+						}
+						cSign.setSuccessCallback(signCB);
+						var cAddData = new AfirmaClient(pageClient);
+						cAddData.setErrorCallback(pageClient
+								.getWrappedErrorCallback());
+						cAddData.setCompleteCallback(undefined);
+						cAddData.setBeforeSendCallback(undefined);
+						var addDataCB = function(/* Anything */response, /* String */
+						textStatus, /* jqXHR */
+						jqXHR) {
+							var separatorExt = fileName.lastIndexOf(".");
+							var extension = fileName
+									.substring(separatorExt + 1);
+							var pSign = new Object();
+							pSign.algorithm = 'SHA512withRSA';
+							if (extension.toUpperCase() == "PDF") {
+								pSign.format = 'PAdES';
+								pSign.extraParams = 'format=PAdES-Simple';
+							} else {
+								pSign.format = 'XAdES';
+								pSign.extraParams = 'format=XAdES Detached';
+							}
+							pSign.extraParams = pSign.extraParams
+									+ "\nfilters.1=signingCert:;nonexpired:"
+							cSign.sign(pSign);
+						}
+						cAddData.setSuccessCallback(addDataCB);
+						var cFileNameContentBase64 = new AfirmaClient(
+								pageClient);
+						var fileNameContentBase64CB = function(
+						/* Anything */response, /* String */
+						textStatus, /* jqXHR */
+						jqXHR) {
+							if (response.error == 0) {
+								fileName = response.fileName;
+								$("#pem").val("fileName: " + fileName + "\n");
+								var pAddData = new Object();
+								pAddData.data = response.msg;
+								fileName = response.fileName;
+								delete response.msg;
+								cAddData.addData(pAddData);
+							} else {
+								if (pageClient._errorCallback) {
+									pageClient._errorCallback(textResponse,
+											textStatus, jqXHR);
+								}
+								if (pageClient._completeCallback) {
+									pageClient._completeCallback(jqXHR,
+											textStatus);
+								}
+							}
+						}
+						var cFileNameContentBase64 = new AfirmaClient(
+								pageClient);
+						cFileNameContentBase64.setErrorCallback(pageClient
+								.getWrappedErrorCallback());
+						cFileNameContentBase64.setCompleteCallback(undefined);
+						var pFileNameContentBase64 = new Object();
+						pFileNameContentBase64.title = "Seleccione fichero:";
+						pFileNameContentBase64.extensions = "pdf,zip,odt,ini,rtf,doc,docx,xml";
+						pFileNameContentBase64.description = undefined;
+						pFileNameContentBase64.filePath = undefined;
+						cFileNameContentBase64.setErrorCallback(pageClient
+								.getWrappedErrorCallback());
+						cFileNameContentBase64.setCompleteCallback(undefined);
+						cFileNameContentBase64
+								.setSuccessCallback(fileNameContentBase64CB);
+						cFileNameContentBase64
+								.getFileNameContentBase64(cFileNameContentBase64);
+					});
 		</script>
 		<option></option>
 		<script type="text/javascript">

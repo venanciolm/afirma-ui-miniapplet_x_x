@@ -160,9 +160,9 @@ InvokerSubject.prototype.remove = function(observer) {
 //
 // successCallback(data);
 // errorCallback(MiniApplet.clienteFirma.getErrorType(),
-// MiniApplet.clienteFirma.getErrorMessage());
 //
 // setLocale : function (locale)
+// setServlets : function (storageServlet, retrieverServlet) {
 // echo : function ()
 // setStickySignatory : function (sticky)
 // getBase64FromText : function (plainText, charset)
@@ -184,7 +184,6 @@ InvokerSubject.prototype.remove = function(observer) {
 // getCurrentLog : function ()
 //
 // cargarMiniApplet : function (base, keystore)
-// setServlets : function (storageServlet, retrieverServlet) {
 //
 var AfirmaClient = function(/* AfirmaClient */parent) {
 	this._command; /* to remove */
@@ -201,6 +200,9 @@ var AfirmaClient = function(/* AfirmaClient */parent) {
 	this.CHECKTIME_RECOMMENDED = "CT_RECOMMENDED";
 	this.CHECKTIME_OBLIGATORY = "CT_OBLIGATORY";
 	this._data;
+	this.storageServlet = "";
+	this.retrieverServlet = "";
+	this.severeTimeDelay = false;
 	this._root = parent;
 	var root = this._root;
 	while (root) {
@@ -309,6 +311,14 @@ AfirmaClient.prototype.setLocale = function(locale) {
 }
 //
 //
+// setServlets : function (storageServlet, retrieverServlet) {
+//
+AfirmaClient.prototype.setServlets = function(storageServlet, retrieverServlet) {
+	this.storageServletAddress = storageServlet;
+	this.retrieverServletAddress = retrieverServlet;
+}
+//
+//
 // checkTime : function (checkType, maxMillis)
 //
 AfirmaClient.prototype.checkTime = function(checkType, maxMillis) {
@@ -326,7 +336,6 @@ AfirmaClient.prototype.checkTime = function(checkType, maxMillis) {
 
 	// Recogemos la hora local, nada mas obtener la respuesta del servidor
 	var clientDate = new Date();
-
 	// Tomamos la hora a partir de la respuesta del servidor. Si esta es 0,
 	// estamos en local
 	var serverDate = new Date(xhr.getResponseHeader("Date"));
@@ -334,7 +343,6 @@ AfirmaClient.prototype.checkTime = function(checkType, maxMillis) {
 		// No hacemos nada si estamos en local
 		return;
 	}
-
 	var delay = Math.abs(clientDate.getTime() - serverDate.getTime());
 	if (delay > maxMillis) {
 		if (checkType == this.CHECKTIME_RECOMMENDED) {
@@ -343,7 +351,7 @@ AfirmaClient.prototype.checkTime = function(checkType, maxMillis) {
 					+ clientDate.toLocaleString()
 					+ "\nHora del servidor: " + serverDate.toLocaleString());
 		} else if (checkType == this.CHECKTIME_OBLIGATORY) {
-			MiniApplet.severeTimeDelay = true;
+			this.severeTimeDelay = true;
 			alert("Se ha detectado un desfase horario entre su sistema y el servidor. Debe corregir la hora de su sistema antes de continuar."
 					+ "\nHora de su sistema: "
 					+ clientDate.toLocaleString()
