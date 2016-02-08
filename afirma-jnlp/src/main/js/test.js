@@ -1,35 +1,54 @@
-var pageClient = new AfirmaClient();
-pageClient.setBeforeSendCallback(function(
-/* jqXHR */jqXHR,
-/* PlainObject */settings) {
-	$("#resultado").html("Procesando, espere por favor...");
-	$('#preloader').show();
-});
-pageClient.setCompleteCallback(function(
-/* jqXHR */jqXHR,
-/* String */textStatus) {
-	$("#resultado").html(textStatus);
-	$('#preloader').hide();
-});
-pageClient.setErrorCallback(function(
-/* jqXHR */jqXHR,
-/* String */textStatus,
-/* String */errorThrown) {
-	$("#console").val(errorThrown);
-});
-pageClient.setSuccessCallback(function(
-/* Anything */response,
-/* String */textStatus,
-/* jqXHR */jqXHR) {
-	var value = "id: " + response.id;
-	value += "\n" + "type: " + response.type;
-	value += "\n" + "time: " + response.time;
-	value += "\n" + "error: " + response.error;
-	value += "\n" + "descError: " + response.descError;
-	value += "\n";
-	value += "\n" + "textStatus: " + textStatus;
-	$("#console").val(value);
-});
+AfirmaClient.prototype.signMsg = function(/* String */textPlain,/* Any */
+parameters,/* String */charset) {
+	if (!textPlain) {
+		return;
+	}
+	var client = this;
+	var cBase64 = new AfirmaClient(this);
+	cBase64.setErrorCallback(client.getWrappedErrorCallback());
+	cBase64.setCompleteCallback(undefined);
+	cBase64.setSuccessCallback(function( /* Any */response,/* String */
+	textStatus, /* jqXHR */jqXHR) {
+		client.signBase64(response.msg, parameters);
+	});
+	var item = new Object();
+	item.plainText = textPlain;
+	item.charset = charset;
+	cBase64.setCommand("getBase64FromText");
+	cBase64.invoke(item);
+}
+AfirmaClient.prototype.signBase64 = function(/* String */base64,/* Any */
+parameters) {
+	if (!base64) {
+		return;
+	}
+	var client = this;
+	var cAddData = new AfirmaClient(this);
+	client.setData(base64);
+	cAddData.setSuccessCallback(function( /* Any */response,/* String */
+	textStatus, /* jqXHR */jqXHR) {
+		if (client.getData() && client.getData().length > 0) {
+			client.signBase64(client.getData(), parameters);
+		} else {
+			client.sign(parameters);
+		}
+	});
+	cAddData.setErrorCallback(client.getWrappedErrorCallback());
+	cAddData.setBeforeSendCallback(client._beforeSendCallback);
+	cAddData.setCompleteCallback(undefined);
+	var msgRequest;
+	if (client.BUFFER_SIZE < client.getData().length) {
+		msgRequest = client.getData().substring(0, client.BUFFER_SIZE);
+		client.setData(client.getData().substring(client.BUFFER_SIZE));
+	} else {
+		msgRequest = client.getData();
+		client.setData("");
+	}
+	var parametersCarga = new Object();
+	parametersCarga.data = msgRequest;
+	cAddData.setCommand("addData");
+	cAddData.invoke(parametersCarga);
+}
 function signMsg() {
 	var textPlain = $("#inputText").val();
 	var item = new Object();
