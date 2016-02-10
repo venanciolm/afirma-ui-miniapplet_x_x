@@ -67,6 +67,7 @@ public class ServerCtrl {
 	private Executor executor;
 	private MiniAfirmaApplet wrapper;
 	private CloseWindowAdapter closeHandler;
+	private static final String __PWD = "OBF:1vn21ugu1saj1v9i1v941sar1ugw1vo0";
 
 	/**
 	 * {@link http
@@ -87,8 +88,8 @@ public class ServerCtrl {
 		final SslContextFactory sslContextFactory = new SslContextFactory();
 		final URL keyStoreURL = Thread.currentThread().getContextClassLoader().getResource("jks/jetty.keystore.jks");
 		sslContextFactory.setKeyStorePath(keyStoreURL.toExternalForm());
-		sslContextFactory.setKeyStorePassword("changeit");
-		sslContextFactory.setKeyManagerPassword("changeit");
+		sslContextFactory.setKeyStorePassword(__PWD);
+		sslContextFactory.setKeyManagerPassword(__PWD);
 
 		final HttpConfiguration http_config = new HttpConfiguration();
 		http_config.setSecureScheme(HTTPS_SCHEME);
