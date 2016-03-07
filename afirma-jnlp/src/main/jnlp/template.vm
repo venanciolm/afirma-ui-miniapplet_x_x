@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <jnlp spec="1.0+" codebase="https://dev.farmafene.com/jnlp/afirma" href="$outputFile">
- <information>
-    <title>@firma - Jnlp</title>
-    <vendor>Farmafene.com</vendor>
- </information>
- <security>
- 	<all-permissions/>
- </security>
- <resources>
-    <j2se version="1.7+" initial-heap-size="32m" max-heap-size="128m" />
-    <property name="jnlp.versionEnabled" value="false"/>
+	<information>
+		<title>@firma - Jnlp</title>
+		<vendor>Farmafene.com</vendor>
+	</information>
+	<security>
+		<all-permissions/>
+	</security>
+	<resources>
+		<j2se version="1.7+" initial-heap-size="32m" max-heap-size="128m" />
+		<property name="jnlp.versionEnabled" value="false"/>
     $dependencies
- </resources>
- <application-desc main-class="$mainClass">
- </application-desc>
+	</resources>
+	<application-desc main-class="$mainClass">
+		<application-desc main-class="com.farmafene.afirma.Main">
+			<argument>afirmajnlp://service?ports=9999,10001,10002&sessionId=aaaa&timeout=4</argument>
+		</application-desc>
+	</application-desc>
 </jnlp>

@@ -21,39 +21,35 @@
  * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.farmafene.afirma.dto;
+package com.farmafene.protocolurl;
 
-@SuppressWarnings("serial")
-public class EchoMessageResponse extends StringMessageResponse {
-	private String sessionId;
+public class URLProtocolParser {
+	private static final String KEY_PART = "=";
+	private static final String URI_PARTS = "&";
+	private static final String HOST_PART = "\\?";
+	private static final String PROTOCOL_PART = "\\:\\/\\/";
 
-	public EchoMessageResponse() {
-
+	private URLProtocolParser() {
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(getClass().getSimpleName()).append(" [");
-		sb.append("sessionId=").append(sessionId);
-		sb.append(", msg=").append(getMsg());
-		sb.append(", error=").append(getError());
-		sb.append(", descError=").append(getDescError());
-		sb.append("]");
-		return sb.toString();
+	public static URLProtocol parse(String url) {
+		URLProtocol p = new URLProtocol();
+		String[] a = url.split(PROTOCOL_PART);
+		p.setName(a[0]);
+		String[] a2 = a[1].split(HOST_PART);
+		p.setHost(a2[0]);
+		String[] params = a2[1].split(URI_PARTS);
+		for (String param : params) {
+			String[] a3 = param.split(KEY_PART, 2);
+			p.putValue(a3[0], a3[1]);
+		}
+		return p;
 	}
 
-	public String getSessionId() {
-		return sessionId;
-	}
+	public static void main(String... args) {
+		URLProtocol p = URLProtocolParser.parse(
+				"miniapplet13://service?ports=9999,59117,49248,63579,51983&timeout=4&sessionId=qMJ4nN1Kq9c8zstKo8Pg");
+		System.out.println(p);
 
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
 	}
-
 }

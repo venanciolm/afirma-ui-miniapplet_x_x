@@ -21,14 +21,18 @@
  * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.farmafene.afirma.dto;
+package com.farmafene.protocolurl;
 
-@SuppressWarnings("serial")
-public class EchoMessageResponse extends StringMessageResponse {
-	private String sessionId;
+import java.util.HashMap;
+import java.util.Map;
 
-	public EchoMessageResponse() {
+public class URLProtocol {
+	private String name;
+	private String host;
+	private Map<String, String> params;
 
+	public URLProtocol() {
+		this.params = new HashMap<String, String>();
 	}
 
 	/**
@@ -39,21 +43,36 @@ public class EchoMessageResponse extends StringMessageResponse {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(getClass().getSimpleName()).append(" [");
-		sb.append("sessionId=").append(sessionId);
-		sb.append(", msg=").append(getMsg());
-		sb.append(", error=").append(getError());
-		sb.append(", descError=").append(getDescError());
-		sb.append("]");
+		sb.append(getClass().getSimpleName()).append("={");
+		sb.append("protocol='").append(name);
+		sb.append("', host='").append(host);
+		sb.append("', uri=").append(params);
+		sb.append("}");
 		return sb.toString();
 	}
 
-	public String getSessionId() {
-		return sessionId;
+	public String getName() {
+		return name;
 	}
 
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
+	void setName(String name) {
+		this.name = name;
+	}
+
+	public String getHost() {
+		return host;
+	}
+
+	void setHost(String host) {
+		this.host = host;
+	}
+
+	public String getParamValue(String param) {
+		return params.get(param);
+	}
+
+	void putValue(String key, String value) {
+		params.put(key, value);
 	}
 
 }
