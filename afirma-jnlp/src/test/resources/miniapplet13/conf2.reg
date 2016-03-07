@@ -12,5 +12,5 @@ Windows Registry Editor Version 5.00
 [HKEY_CLASSES_ROOT\afirmajnlp\shell\open]
 
 [HKEY_CLASSES_ROOT\afirmajnlp\shell\open\command]
-@="D:\\bin\\jdk\\1.7.0_79\\jre\\bin\\javaws.exe -open \"%1\" https://poolcoruna14w7.indra.es/jnlp/afirma/afirma.jnlp"
+@="D:\\bin\\jdk\\1.7.0_79\\jre\\bin\\javaws.exe -open \"%1\" https://dev.farmafene.com/jnlp/afirma/afirma.jnlp"
 
