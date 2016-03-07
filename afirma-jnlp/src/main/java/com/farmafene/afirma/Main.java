@@ -43,6 +43,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.farmafene.afirma.rest.ServerCtrl;
+import com.farmafene.protocolurl.URLProtocol;
+import com.farmafene.protocolurl.URLProtocolParser;
 
 import es.gob.afirma.miniapplet.MiniAfirmaApplet;
 
@@ -51,7 +53,7 @@ public class Main {
 	private static final Logger logger = LoggerFactory.getLogger(Main.class);
 	private static int POOL_SIZE = 5;
 
-	public void init() {
+	public void init(int[] ports, int minutes, String sessionId) {
 		final MiniAfirmaApplet applet = startApplet();
 		final ServerCtrl serverCtrl;
 		final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(POOL_SIZE, POOL_SIZE, 10, TimeUnit.SECONDS,
@@ -62,6 +64,11 @@ public class Main {
 		serverCtrl.setCloseHander(closeImpl);
 		serverCtrl.setExecutor(threadPoolExecutor);
 		serverCtrl.setWrapper(applet);
+		serverCtrl.setJettyPorts(ports);
+		serverCtrl.setSessionId(sessionId);
+		if (minutes > 0) {
+			serverCtrl.setTimeout(minutes);
+		}
 		frame.setUndecorated(true);
 		frame.setSize(0, 0);
 		frame.addWindowListener(closeImpl);
@@ -74,7 +81,6 @@ public class Main {
 			final SystemTray tray = SystemTray.getSystemTray();
 			// Create a pop-up menu components
 			final Menu displayMenu = new Menu("Display");
-			final MenuItem infoItem = new MenuItem("Info");
 			final MenuItem exitItem = new MenuItem("Exit");
 			exitItem.addActionListener(new ActionListener() {
 				@Override
@@ -91,7 +97,6 @@ public class Main {
 			// Add components to pop-up menu
 			final PopupMenu popup = new PopupMenu();
 			popup.add(displayMenu);
-			displayMenu.add(infoItem);
 			displayMenu.add(exitItem);
 
 			trayIcon.setPopupMenu(popup);
@@ -116,8 +121,39 @@ public class Main {
 		return applet;
 	}
 
+	private static int[] getPorts(String sPorts, int[] ports) {
+		if (sPorts == null || "".equals(sPorts.trim())) {
+			return ports;
+		}
+		String[] sp = sPorts.split(",");
+		int[] out = new int[sp.length];
+		int index = 0;
+		for (String s : sp) {
+			out[index++] = Integer.parseInt(s);
+		}
+		return out;
+	}
+
 	public static void main(final String... args) {
 		final Main main = new Main();
-		main.init();
+		int[] ports = { 9999 };
+		String sessionId = "";
+		int minutes = 4;
+		logger.error("Tenemos: argumentos? {}", args.length);
+		logger.error("Tenemos: itemURL {}", System.getProperty("itemURL"));
+		if (args.length > 0) {
+			String url = args[0];
+			if ("-open".equals(url) && args.length > 1) {
+				url = args[1];
+			}
+			logger.error("La url es '{}'", url);
+			URLProtocol p = URLProtocolParser.parse(url);
+			logger.error("La url es '{}'", p);
+			minutes = Integer.parseInt(p.getParamValue("timeout"));
+			sessionId = p.getParamValue("sessionId");
+			String sPorts = p.getParamValue("ports");
+			ports = getPorts(sPorts, ports);
+		}
+		main.init(ports, minutes, sessionId);
 	}
 }

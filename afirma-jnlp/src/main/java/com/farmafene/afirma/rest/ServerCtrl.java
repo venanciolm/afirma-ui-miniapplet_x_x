@@ -58,7 +58,6 @@ public class ServerCtrl {
 	private static final int HTTPS_IDLE_TIMEOUT = 500000;
 	private static final int JETTY_OUTPUT_BUFFER_SIZE = 32768;
 	private static final String BIND_ADDRESS = "localhost";
-	private static final int JETTY_PORT = 9999;
 	private static final String HTTPS_SCHEME = "https";
 	private static final String AFIRMA_CTX = "/afirma";
 	private static final Logger logger = LoggerFactory.getLogger(ServerCtrl.class);
@@ -67,19 +66,24 @@ public class ServerCtrl {
 	private Executor executor;
 	private MiniAfirmaApplet wrapper;
 	private CloseWindowAdapter closeHandler;
+	private int[] jettyPorts;
+	private String sessionId;
+	private int timeout = -1;
 	private static final String __PWD = "OBF:1vn21ugu1saj1v9i1v941sar1ugw1vo0";
 
 	/**
 	 * {@link http
 	 * ://www.eclipse.org/jetty/documentation/current/embedded-examples
 	 * .html#embedded-many-connectors}
+	 * 
+	 * @throws InterruptedException
 	 *
-	 * @see http 
+	 * @see http
 	 *      ://www.eclipse.org/jetty/documentation/current/embedded-examples.
 	 *      html#embedded-many-connectors
 	 * @throws Exception
 	 */
-	public void done() throws Exception {
+	public void done() throws InterruptedException {
 		final ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		context.setContextPath(AFIRMA_CTX);
 
@@ -93,15 +97,14 @@ public class ServerCtrl {
 
 		final HttpConfiguration http_config = new HttpConfiguration();
 		http_config.setSecureScheme(HTTPS_SCHEME);
-		http_config.setSecurePort(getJettyPort());
 		http_config.setOutputBufferSize(JETTY_OUTPUT_BUFFER_SIZE);
 
 		final HttpConfiguration https_config = new HttpConfiguration(http_config);
 		https_config.addCustomizer(new SecureRequestCustomizer());
 
-		final ServerConnector https = new ServerConnector(this.jettyServer, new SslConnectionFactory(sslContextFactory,
-				HttpVersion.HTTP_1_1.asString()), new HttpConnectionFactory(https_config));
-		https.setPort(getJettyPort());
+		final ServerConnector https = new ServerConnector(this.jettyServer,
+				new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()),
+				new HttpConnectionFactory(https_config));
 		https.setIdleTimeout(HTTPS_IDLE_TIMEOUT);
 		https.setHost(BIND_ADDRESS);
 		this.jettyServer.setConnectors(new Connector[] { https });
@@ -111,17 +114,51 @@ public class ServerCtrl {
 		request.setExecutor(this.executor);
 		request.setWrapper(this.wrapper);
 		request.setCloseHandler(this.closeHandler);
+		request.setSessionId(this.sessionId);
 
+		final TimeOutFilter timeoutFilter = new TimeOutFilter();
+		timeoutFilter.setTimeout(timeout);
+		timeoutFilter.setAdapter(closeHandler);
+		executor.execute(timeoutFilter);
+		final ResourceConfig resourceConfig = new ResourceConfig().register(request);
+		resourceConfig.register(timeoutFilter);
 		final CorsFilter cors = new CorsFilter();
-		final ResourceConfig resourceConfig = new ResourceConfig().register(request).register(cors);
+		resourceConfig.register(cors);
 		final ServletHolder aFirmaServlet = new ServletHolder(new ServletContainer(resourceConfig));
 		aFirmaServlet.setInitOrder(0);
 		// todo lo del contexto /afirma, pertenece a este servlet ...
 		context.addServlet(aFirmaServlet, "/*");
-		this.jettyServer.start();
-		logger.info("El servidor es: {} '{}'", this.jettyServer.getURI(), this.jettyServer.getState());
 		final LoggerContext lContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
+		try {
+			final JoranConfigurator configurator = new JoranConfigurator();
+			configurator.setContext(lContext);
+			// Call context.reset() to clear any previous configuration, e.g.
+			// default
+			// configuration. For multi-step configuration, omit calling
+			// context.reset().
+			lContext.reset();
+			configurator.doConfigure(Thread.currentThread().getContextClassLoader().getResourceAsStream("logback.xml"));
+		} catch (final JoranException je) {
+			// StatusPrinter will handle this
+		}
+		StatusPrinter.printInCaseOfErrorsOrWarnings(lContext);
+		boolean started = false;
+		for (int port : getJettyPorts()) {
+			http_config.setSecurePort(port);
+			https.setPort(port);
+			try {
+				this.jettyServer.start();
+				started = true;
+				logger.info("El servidor es: {} '{}'", this.jettyServer.getURI(), this.jettyServer.getState());
+				break;
+			} catch (Exception e) {
+				logger.warn("No se ha podido arrancar el Jetty en el puerto '{}'", port);
+			}
+		}
+		if (!started) {
+			this.serverLatch.countDown();
+		}
 		try {
 			final JoranConfigurator configurator = new JoranConfigurator();
 			configurator.setContext(lContext);
@@ -150,8 +187,8 @@ public class ServerCtrl {
 		}
 	}
 
-	private int getJettyPort() {
-		return JETTY_PORT;
+	private int[] getJettyPorts() {
+		return jettyPorts;
 	}
 
 	/**
@@ -169,7 +206,8 @@ public class ServerCtrl {
 	}
 
 	/**
-	 * @param serverLatch the serverLatch to set
+	 * @param serverLatch
+	 *            the serverLatch to set
 	 */
 	public void setServerLatch(final CountDownLatch serverLatch) {
 		this.serverLatch = serverLatch;
@@ -187,7 +225,8 @@ public class ServerCtrl {
 	/**
 	 * Asigna el valor de la propiedad 'executor'
 	 *
-	 * @param executor valor que se le quiere dar a la propiedad 'executor'
+	 * @param executor
+	 *            valor que se le quiere dar a la propiedad 'executor'
 	 */
 	public void setExecutor(final Executor executor) {
 		this.executor = executor;
@@ -205,7 +244,8 @@ public class ServerCtrl {
 	/**
 	 * Asigna el valor de la propiedad 'wrapper'
 	 *
-	 * @param wrapper valor que se le quiere dar a la propiedad 'wrapper'
+	 * @param wrapper
+	 *            valor que se le quiere dar a la propiedad 'wrapper'
 	 */
 	public void setWrapper(final MiniAfirmaApplet wrapper) {
 		this.wrapper = wrapper;
@@ -213,6 +253,22 @@ public class ServerCtrl {
 
 	public void setCloseHander(final CloseWindowAdapter closeImpl) {
 		this.closeHandler = closeImpl;
+	}
+
+	public void setJettyPorts(int[] jettyPorts) {
+		this.jettyPorts = jettyPorts;
+	}
+
+	public void setSessionId(String sessionId) {
+		this.sessionId = sessionId;
+	}
+
+	public int getTimeout() {
+		return timeout;
+	}
+
+	public void setTimeout(int timeout) {
+		this.timeout = timeout;
 	}
 
 }

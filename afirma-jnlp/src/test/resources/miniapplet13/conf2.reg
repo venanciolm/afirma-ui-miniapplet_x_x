@@ -1,0 +1,16 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\afirmajnlp]
+@="URL:Miniapplet 1.3 Protocol"
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\afirmajnlp\DefaultIcon]
+@="D:\\data\\GITHUB\\afirma-ui-miniapplet_x_x\\afirma-jnlp\\src\\test\\resources\\miniapplet13\\favicon.ico"
+
+[HKEY_CLASSES_ROOT\afirmajnlp\shell]
+
+[HKEY_CLASSES_ROOT\afirmajnlp\shell\open]
+
+[HKEY_CLASSES_ROOT\afirmajnlp\shell\open\command]
+@="D:\\bin\\jdk\\1.7.0_79\\jre\\bin\\javaws.exe -open \"%1\" https://poolcoruna14w7.indra.es/jnlp/afirma/afirma.jnlp"
+
