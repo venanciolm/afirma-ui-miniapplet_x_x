@@ -3,539 +3,76 @@
 <head runat="server">
 <title>Sample Page</title>
 <meta http-equiv="X-UA-Compatible" content="IE=edge;chrome=1" />
-<link rel="shortcut icon" type="image/png" href="favicon.ico" />
-<script type="text/javascript" src="jquery-1.11.3.min.js"></script>
+<link rel="shortcut icon" type="image/png" href="favicon.ico"></link>
+<script type="text/javascript" src="jquery-1.11.3.js"></script>
+<script src="bootstrap-3.3.6-dist/js/bootstrap.js"></script>
+<script type="text/javascript" src="loadingoverlay.js"></script>
+<script type="text/javascript" src="bootbox.js"></script>
 <script type="text/javascript" src="afirma-jnlp.js"></script>
-<style>
-#preloader {
-	display: none;
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
+<script type="text/javascript" src="afirma-jnlp.v2.js"></script>
+<script type="text/javascript" src="test.js"></script>
+<link rel="stylesheet" href="bootstrap-3.3.6-dist/css/bootstrap.css"
+	type="text/css"></link>
+<style type="text/css">
+.modal-backdrop {
 	background-color: rgba(53, 147, 1, 0.7);
-	z-index: 99;
-	height: 100%;
-}
-
-#status {
-	width: 200px;
-	height: 200px;
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	background-image: url(ajax-loader.gif);
-	background-repeat: no-repeat;
-	background-position: center;
-	margin: -100px 0 0 -100px;
 }
 </style>
+<script type="text/javascript">
+	$(document).ready(function() {
+		window.pageClient.checkTime(pageClient.CHECKTIME_OBLIGATORY, 0000);
+	});
+</script>
 </head>
 <body>
 	<script type="text/javascript">
-		var datos = [];
-		var pageClient = new AfirmaClient();
-		pageClient.checkTime(pageClient.CHECKTIME_OBLIGATORY, 1000);
-		pageClient.setBeforeSendCallback(function(
-		/* jqXHR */jqXHR,
-		/* PlainObject */settings) {
-			$("#resultado").html("Procesando, espere por favor...");
-			$('#preloader').show();
-		});
-		pageClient.setCompleteCallback(function(
-		/* jqXHR */jqXHR,
-		/* String */textStatus) {
-			$("#resultado").html(textStatus);
-			$('#preloader').hide();
-		});
-		pageClient.setErrorCallback(function(
-		/* jqXHR */jqXHR,
-		/* String */textStatus,
-		/* String */errorThrown) {
-			$("#console").val(errorThrown);
-		});
-		pageClient.setSuccessCallback(function(
-		/* Anything */response,
-		/* String */textStatus,
-		/* jqXHR */jqXHR) {
-			var value = "id: " + response.id;
-			value += "\n" + "type: " + response.type;
-			value += "\n" + "time: " + response.time;
-			value += "\n" + "error: " + response.error;
-			value += "\n" + "descError: " + response.descError;
-			value += "\n";
-			value += "\n" + "textStatus: " + textStatus;
-			$("#console").val(value);
-		});
+		
 	</script>
 
-	<select id="combo">
-		<option>----</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				alert("Seleccione!")
-			});
-		</script>
-		<option>@firma.echo</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				var c = new AfirmaClient(pageClient);
-				var scb = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */
-				jqXHR) {
-					if (pageClient._successCallback) {
-						pageClient
-								._successCallback(response, textStatus, jqXHR);
-					}
-					$("#outputText").val(response.msg);
-					$("#pem").val('');
-				};
-				c.setSuccessCallback(scb);
-				c.echo();
-			});
-		</script>
-		<option>@firma.setStickySignatory(true)</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				var c = new AfirmaClient(pageClient);
-				var scb = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */
-				jqXHR) {
-					if (pageClient._successCallback) {
-						pageClient
-								._successCallback(response, textStatus, jqXHR);
-					}
-					$("#outputText").val(response.msg);
-					$("#pem").val('');
-				};
-				c.setSuccessCallback(scb);
-				var param = new Object();
-				param.sticky = true;
-				c.setStickySignatory(param);
-			});
-		</script>
-		<option>@firma.setStickySignatory(false)</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				var c = new AfirmaClient(pageClient);
-				var scb = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */
-				jqXHR) {
-					if (pageClient._successCallback) {
-						pageClient
-								._successCallback(response, textStatus, jqXHR);
-					}
-					$("#outputText").val(response.msg);
-					$("#pem").val('');
-				};
-				c.setSuccessCallback(scb);
-				var param = new Object();
-				param.sticky = false;
-				c.setStickySignatory(param);
-			});
-		</script>
-		<option>@firma.getFileNameContentBase64</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				var params = new Object();
-				params.title = "Seleccione fichero:";
-				params.extensions = "pdf,zip,odt,ini,rtf,doc,docx";
-				params.description = undefined;
-				params.filePath = undefined;
-				var c = new AfirmaClient(pageClient);
-				var scb = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */
-				jqXHR) {
-					$("#outputText").val(response.msg);
-					$("#pem").val(response.fileName);
-				}
-				c.setSuccessCallback(scb);
-				c.getFileNameContentBase64(params);
-			});
-		</script>
-		<option>@firma.getMultiFileNameContentBase64</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				var params = new Object();
-				params.title = "Seleccione fichero:";
-				params.extensions = "pdf,zip,odt,ini,rtf,doc,docx";
-				params.description = undefined;
-				params.filePath = undefined;
-				var c = new AfirmaClient(pageClient);
-				var scb = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */
-				jqXHR) {
-					$("#outputText").val("");
-					$("#pem").val("");
-					for (i = 0; i < response.fileNames.length; i++) {
-						$("#outputText").val(
-								$("#outputText").val() + "\n>file: "
-										+ response.fileNames[i]);
-						$("#outputText").val(
-								$("#outputText").val() + "\n"
-										+ response.msgs[i]);
-						$("#pem").val(
-								$("#pem").val() + "\n file: "
-										+ response.fileNames[i]);
-					}
-				}
-				c.setSuccessCallback(scb);
-				c.getMultiFileNameContentBase64(params);
-			});
-		</script>
-		<option>@firma.getErrorMessage</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				var c = new AfirmaClient(pageClient);
-				var scb = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */jqXHR) {
-					$("#outputText").val(response.msg);
-					$("#pem").val("");
-				}
-				c.setSuccessCallback(scb);
-				c.getErrorMessage();
-			});
-		</script>
-		<option>@firma.getErrorType</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				var c = new AfirmaClient(pageClient);
-				var scb = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */jqXHR) {
-					$("#outputText").val(response.msg);
-					$("#pem").val("");
-				}
-				c.setSuccessCallback(scb);
-				c.getErrorType();
-			});
-		</script>
-		<option>@firma.getCurrentLog</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				var c = new AfirmaClient(pageClient);
-				var scb = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */jqXHR) {
-					$("#outputText").val(response.msg);
-					$("#pem").val("");
-				}
-				c.setSuccessCallback(scb);
-				c.getCurrentLog();
-			});
-		</script>
-		<option>@firma.sign</option>
-		<script type="text/javascript">
-			datos
-					.push(function() {
-						var invoker = new AfirmaClient(pageClient);
-						var successCB = function(/* Anything */response, /* String */
-						textStatus, /* jqXHR */
-						jqXHR) {
-							if (pageClient._successCallback) {
-								pageClient._successCallback(response,
-										textStatus, jqXHR);
-							}
-							$("#outputText").val(response.msg);
-							$("#pem").val(response.pemCertificate);
-						};
-						invoker.setSuccessCallback(successCB);
-						var item = new Object();
-						item.algorithm = 'SHA512withRSA';
-						item.format = 'XAdES';
-						item.extraParams = 'format=XAdES Detached\nfilters.1=signingCert:;nonexpired:';
-						invoker.sign(item);
-					});
-		</script>
-		<option>@firma.counterSign</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				var invoker = new AfirmaClient(pageClient);
-				var successCB = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */
-				jqXHR) {
-					if (pageClient._successCallback) {
-						pageClient
-								._successCallback(response, textStatus, jqXHR);
-					}
-					$("#outputText").val(response.msg);
-					$("#pem").val(response.pemCertificate);
-				};
-				invoker.setSuccessCallback(successCB);
-				var item = new Object();
-				item.algorithm = 'SHA512withRSA';
-				item.format = 'AUTO';
-				item.extraParams = 'filters.1=signingCert:;nonexpired:';
-				invoker.counterSign(item);
-			});
-		</script>
-		<option>@firma-jnlp.getBase64FromText</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				var invoker = new AfirmaClient(pageClient);
-				var successCB = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */
-				jqXHR) {
-					if (pageClient._successCallback) {
-						pageClient
-								._successCallback(response, textStatus, jqXHR);
-					}
-					$("#outputText").val(response.msg);
-					$("#pem").val('');
-				};
-				invoker.setSuccessCallback(successCB);
-				var item = new Object();
-				item.plainText = $("#inputText").val();
-				item.charset = "default";
-				invoker.getBase64FromText(item);
-			});
-		</script>
-		<option>@firma-jnlp.getTextFromBase64</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				var invoker = new AfirmaClient(pageClient);
-				var successCB = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */
-				jqXHR) {
-					if (pageClient._successCallback) {
-						pageClient
-								._successCallback(response, textStatus, jqXHR);
-					}
-					$("#outputText").val(response.msg);
-					$("#pem").val('');
-				};
-				invoker.setSuccessCallback(successCB);
-				var item = new Object();
-				item.data = $("#inputText").val();
-				item.charset = "default";
-				invoker.getTextFromBase64(item);
-			});
-		</script>
-		<option>Ejemplo::coSign-from files</option>
-		<script type="text/javascript">
-			datos
-					.push(function() {
-						var cFileNameContentBase64 = new AfirmaClient(
-								pageClient);
-						cFileNameContentBase64.setErrorCallback(pageClient
-								.getWrappedErrorCallback());
-						cFileNameContentBase64.setCompleteCallback(undefined);
-						var cCoSign = new AfirmaClient(pageClient);
-						var coSignCB = function(/* Anything */response, /* String */
-						textStatus, /* jqXHR */
-						jqXHR) {
-							if (pageClient._successCallback) {
-								pageClient._successCallback(response,
-										textStatus, jqXHR);
-							}
-							$("#outputText").val(response.msg);
-							$("#pem").val(response.pemCertificate);
-						};
-						var fileNameContentBase64CB = function(
-						/* Anything */response, /* String */
-						textStatus, /* jqXHR */
-						jqXHR) {
-							if (response.error == 0) {
-								var pCoSign = new Object();
-								pCoSign.data = response.msg;
-								delete response.msg;
-								pCoSign.algorithm = 'SHA512withRSA';
-								pCoSign.format = 'AUTO';
-								pCoSign.extraParams = 'filters.1=signingCert:;nonexpired:';
-								cCoSign.coSign(pCoSign);
-							} else {
-								if (pageClient._errorCallback) {
-									pageClient._errorCallback(textResponse,
-											textStatus, jqXHR);
-								}
-								if (pageClient._completeCallback) {
-									pageClient._completeCallback(jqXHR,
-											textStatus);
-								}
-							}
-						}
-						cCoSign.setSuccessCallback(coSignCB);
-						cFileNameContentBase64
-								.setSuccessCallback(fileNameContentBase64CB);
-						var pFileNameContentBase64 = new Object();
-						pFileNameContentBase64.title = "Seleccione fichero Original";
-						pFileNameContentBase64.extensions = "pdf,zip,odt,ini,rtf,doc,docx,xml";
-						pFileNameContentBase64.description = undefined;
-						pFileNameContentBase64.filePath = undefined;
-						cFileNameContentBase64
-								.getFileNameContentBase64(pFileNameContentBase64);
-					});
-		</script>
-		<option>Ejemplo::saveDataToFile</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				var c = new AfirmaClient(pageClient);
-				c.setBeforeSendCallback(undefined);
-				var preC = new AfirmaClient(pageClient);
-				var scb = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */
-				jqXHR) {
-					$("#outputText").val(response.msg);
-					$("#pem").val('');
-				}
-				var preScb = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */
-				jqXHR) {
-					var params = new Object();
-					params.title = "Guarde fichero";
-					params.fileName = "sample.txt";
-					params.extension = "txt"
-					params.description = undefined;
-					c.saveDataToFile(params);
-				}
-				c.setSuccessCallback(scb);
-				var preParams = new Object();
-				preParams.data = $("#inputText").val();
-				preC.setErrorCallback(pageClient.getWrappedErrorCallback());
-				preC.setCompleteCallback(undefined);
-				preC.setSuccessCallback(preScb);
-				preC.addData(preParams);
-			});
-		</script>
-		<option>Ejemplo:Firmar/FileByName</option>
-		<script type="text/javascript">
-			datos
-					.push(function() {
-						var fileName = "";
-						var cSign = new AfirmaClient(pageClient);
-						cSign.setBeforeSendCallback(undefined);
-						var signCB = function(/* Anything */response, /* String */
-						textStatus, /* jqXHR */
-						jqXHR) {
-							$("#outputText").val(response.msg);
-							$("#pem").val(
-									$('#pem').val() + response.pemCertificate);
-							if (pageClient._successCallback) {
-								pageClient._successCallback(response,
-										textStatus, jqXHR);
-							}
-							delete response.msg;
-						}
-						cSign.setSuccessCallback(signCB);
-						var cAddData = new AfirmaClient(pageClient);
-						cAddData.setErrorCallback(pageClient
-								.getWrappedErrorCallback());
-						cAddData.setCompleteCallback(undefined);
-						cAddData.setBeforeSendCallback(undefined);
-						var addDataCB = function(/* Anything */response, /* String */
-						textStatus, /* jqXHR */
-						jqXHR) {
-							var separatorExt = fileName.lastIndexOf(".");
-							var extension = fileName
-									.substring(separatorExt + 1);
-							var pSign = new Object();
-							pSign.algorithm = 'SHA512withRSA';
-							if (extension.toUpperCase() == "PDF") {
-								pSign.format = 'PAdES';
-								pSign.extraParams = 'format=PAdES-Simple';
-							} else {
-								pSign.format = 'XAdES';
-								pSign.extraParams = 'format=XAdES Detached';
-							}
-							pSign.extraParams = pSign.extraParams
-									+ "\nfilters.1=signingCert:;nonexpired:"
-							cSign.sign(pSign);
-						}
-						cAddData.setSuccessCallback(addDataCB);
-						var cFileNameContentBase64 = new AfirmaClient(
-								pageClient);
-						var fileNameContentBase64CB = function(
-						/* Anything */response, /* String */
-						textStatus, /* jqXHR */
-						jqXHR) {
-							if (response.error == 0) {
-								fileName = response.fileName;
-								$("#pem").val("fileName: " + fileName + "\n");
-								var pAddData = new Object();
-								pAddData.data = response.msg;
-								fileName = response.fileName;
-								delete response.msg;
-								cAddData.addData(pAddData);
-							} else {
-								if (pageClient._errorCallback) {
-									pageClient._errorCallback(textResponse,
-											textStatus, jqXHR);
-								}
-								if (pageClient._completeCallback) {
-									pageClient._completeCallback(jqXHR,
-											textStatus);
-								}
-							}
-						}
-						var cFileNameContentBase64 = new AfirmaClient(
-								pageClient);
-						cFileNameContentBase64.setErrorCallback(pageClient
-								.getWrappedErrorCallback());
-						cFileNameContentBase64.setCompleteCallback(undefined);
-						var pFileNameContentBase64 = new Object();
-						pFileNameContentBase64.title = "Seleccione fichero:";
-						pFileNameContentBase64.extensions = "pdf,zip,odt,ini,rtf,doc,docx,xml";
-						pFileNameContentBase64.description = undefined;
-						pFileNameContentBase64.filePath = undefined;
-						cFileNameContentBase64.setErrorCallback(pageClient
-								.getWrappedErrorCallback());
-						cFileNameContentBase64.setCompleteCallback(undefined);
-						cFileNameContentBase64
-								.setSuccessCallback(fileNameContentBase64CB);
-						cFileNameContentBase64
-								.getFileNameContentBase64(cFileNameContentBase64);
-					});
-		</script>
-		<option></option>
-		<script type="text/javascript">
-			datos.push(function() {
-			});
-		</script>
-		<option>@firma-jnlp.exit</option>
-		<script type="text/javascript">
-			datos.push(function() {
-				var invoker = new AfirmaClient(pageClient);
-				var successCB = function(/* Anything */response, /* String */
-				textStatus, /* jqXHR */
-				jqXHR) {
-					if (pageClient._successCallback) {
-						pageClient
-								._successCallback(response, textStatus, jqXHR);
-					}
-					$("#outputText").val('');
-					$("#pem").val('');
-				};
-				invoker.setSuccessCallback(successCB);
-				invoker.exit();
-			});
-		</script>
-	</select>
-	<input type="button" value="Ejecutar"
-		onClick="
-		console.log(document.getElementById('combo').selectedIndex);
-		datos[document.getElementById('combo').selectedIndex]();" />&nbsp;
-	<div id="resultado"></div>
-	<div>
-		<span>Consola</span> <br> <textarea id="console" cols="150"
-				rows="10">
-		 </textarea>
+	<div class="form-group form-horizontal">
+		<label for="combo">Operaci&oacute;n:</label>&nbsp;<select id="combo"
+			class="input-sm">
+			<option>----</option>
+			<option>@firma.echo</option>
+			<option>@firma.setStickySignatory(true)</option>
+			<option>@firma.setStickySignatory(false)</option>
+			<option>@firma.getFileNameContentBase64</option>
+			<option>@firma.getMultiFileNameContentBase64</option>
+			<option>@firma.getErrorMessage</option>
+			<option>@firma.getErrorType</option>
+			<option>@firma.getCurrentLog</option>
+			<option>@firma.sign</option>
+			<option>@firma.counterSign</option>
+			<option>@firma-jnlp.getBase64FromText</option>
+			<option>@firma-jnlp.getTextFromBase64</option>
+			<option>Ejemplo::coSign-from files</option>
+			<option>Ejemplo::saveDataToFile</option>
+			<option>Ejemplo:Firmar/FileByName</option>
+			<option></option>
+			<option>@firma-jnlp.exit</option>
+		</select>&nbsp;<input type="button" value="Ejecutar" class="input-sm btn"
+			onClick="
+		window.datos[document.getElementById('combo').selectedIndex]();" />&nbsp;
 	</div>
-	<div>
-		<span>Entrada</span> <br> <textarea id="inputText" cols="150"
-				rows="10"></textarea>
-	</div>
-	<br />
-	<div>
-		<span>Salida</span> <br />
-		<textarea id="outputText" cols="150" rows="10"></textarea>
-	</div>
-	<br />
-	<div>
-		<span>Salida Adicional</span> <br />
-		<textarea id="pem" cols="150" rows="10"></textarea>
-	</div>
-	<div id="preloader">
-		<div id="status">&nbsp;</div>
-	</div>
+	<form action="Test.html" method="post" id="form_item"
+		enctype="multipart/form-data">
+		<div class="form-group vertical">
+			<label for="resultado">Resultado:</label>
+			<textarea id="resultado" style="width: 150ex; height: 2.5em;"
+				readonly="readonly" class="form-control"></textarea>
+			<label for="console">Console:</label>
+			<textarea id="console" class="form-control"
+				style="width: 150ex; height: 13.5em;"></textarea>
+			<label for="inputText">Entrada:</label>
+			<textarea id="inputText" style="width: 150ex; height: 13.5em;"
+				class="form-control"></textarea>
+			<label for="outputText">Salida:</label>
+			<textarea name="item" id="outputText"
+				style="width: 150ex; height: 13.5em;" class="form-control"></textarea>
+			<label for="pem">Salida adicional:</label>
+			<textarea id="pem" style="width: 150ex; height: 13.5em;"
+				class="form-control"></textarea>
+		</div>
+	</form>
 </body>
 </html>
-

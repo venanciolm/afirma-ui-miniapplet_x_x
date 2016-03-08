@@ -154,12 +154,13 @@ InvokerSubject.prototype.remove = function(observer) {
 		}
 	}
 }
+
 //
 //
 // JavaScript client
 //
 // successCallback(data);
-// errorCallback(MiniApplet.clienteFirma.getErrorType(),
+// errorCallback(MiniApplet.clienteFirma.getErrorType(),MiniApplet.clienteFirma.getErrorMessage()),
 //
 // setLocale : function (locale)
 // setServlets : function (storageServlet, retrieverServlet) {
@@ -186,7 +187,7 @@ InvokerSubject.prototype.remove = function(observer) {
 // cargarMiniApplet : function (base, keystore)
 //
 var AfirmaClient = function(/* AfirmaClient */parent) {
-	this._command; /* to remove */
+	this._alertHandler = null;
 	this._invoker;
 	this._successCallback;
 	this._errorCallback;
@@ -216,6 +217,7 @@ var AfirmaClient = function(/* AfirmaClient */parent) {
 		this._invoker.register(new PreInvokerAfirmaClient(this._invoker));
 	}
 	if (parent) {
+		this._alertHandler = parent._alertHandler;
 		this._successCallback = parent._successCallback;
 		this._errorCallback = parent._errorCallback;
 		this._beforeSendCallback = parent._beforeSendCallback;
@@ -226,6 +228,13 @@ AfirmaClient.constructor = AfirmaClient;
 AfirmaClient.prototype.setServer = function(/* String */serverBaseUrl) {
 	this._server = serverBaseUrl;
 }
+AfirmaClient.prototype.setAlertHandler = function(handler) {
+	if (handler) {
+		this._alertHandler = handler;
+	} else {
+		this._alertHandler = null;
+	}
+}
 AfirmaClient.prototype.getFinalSuccessCallback = function() {
 	if (this._root) {
 		return this._root._successCallback;
@@ -233,41 +242,24 @@ AfirmaClient.prototype.getFinalSuccessCallback = function() {
 		return this._successCallback;
 	}
 }
+AfirmaClient.prototype.setBeforeSendCallback = function(callback) {
+	this._beforeSendCallback = callback;
+}
 AfirmaClient.prototype.setSuccessCallback = function(callback) {
 	this._successCallback = callback;
-}
-AfirmaClient.prototype.getFinalErrorCallback = function() {
-	if (this._root) {
-		return this._root._errorCallback;
-	} else {
-		return this._errorCallback;
-	}
 }
 AfirmaClient.prototype.setErrorCallback = function(callback) {
 	this._errorCallback = callback;
 }
-AfirmaClient.prototype.getFinalBeforeSendCallback = function() {
-	if (this._root) {
-		return this._root._beforeSendCallback;
-	} else {
-		return this._beforeSendCallback;
-	}
-}
-AfirmaClient.prototype.setBeforeSendCallback = function(callback) {
-	this._beforeSendCallback = callback;
-}
-AfirmaClient.prototype.getFinalCompleteCallback = function() {
-	if (this._root) {
-		return this._root._completeCallback;
-	} else {
-		return this._completeCallback;
-	}
-}
 AfirmaClient.prototype.setCompleteCallback = function(callback) {
 	this._completeCallback = callback;
 }
-AfirmaClient.prototype.setCommand = function(/* String */command) {
-	this._command = command;
+AfirmaClient.prototype.alert = function(msg) {
+	if (this._alertHandler) {
+		this._alertHandler(msg);
+	} else {
+		alert(msg);
+	}
 }
 AfirmaClient.prototype.invoke = function( /* Any */parameters) {
 	this._invoker.invoke(/* String */this._command, /* Any */
@@ -325,7 +317,7 @@ AfirmaClient.prototype.checkTime = function(checkType, maxMillis) {
 
 	if (checkType == undefined || checkType == null
 			|| checkType == this.CHECKTIME_NO || maxMillis == undefined
-			|| maxMillis == null || maxMillis <= 0) {
+			|| maxMillis == null || maxMillis < /* = */0) {
 		return;
 	}
 
@@ -344,18 +336,22 @@ AfirmaClient.prototype.checkTime = function(checkType, maxMillis) {
 		return;
 	}
 	var delay = Math.abs(clientDate.getTime() - serverDate.getTime());
-	if (delay > maxMillis) {
+	if (delay >= maxMillis) {
 		if (checkType == this.CHECKTIME_RECOMMENDED) {
-			alert("Se ha detectado un desfase horario entre su sistema y el servidor. Se recomienda que se corrija antes de pulsar Aceptar para continuar."
-					+ "\nHora de su sistema: "
-					+ clientDate.toLocaleString()
-					+ "\nHora del servidor: " + serverDate.toLocaleString());
+			this
+					.alert("Se ha detectado un desfase horario entre su sistema y el servidor. Se recomienda que se corrija antes de pulsar Aceptar para continuar."
+							+ "\nHora de su sistema: "
+							+ clientDate.toLocaleString()
+							+ "\nHora del servidor: "
+							+ serverDate.toLocaleString());
 		} else if (checkType == this.CHECKTIME_OBLIGATORY) {
 			this.severeTimeDelay = true;
-			alert("Se ha detectado un desfase horario entre su sistema y el servidor. Debe corregir la hora de su sistema antes de continuar."
-					+ "\nHora de su sistema: "
-					+ clientDate.toLocaleString()
-					+ "\nHora del servidor: " + serverDate.toLocaleString());
+			this
+					.alert("Se ha detectado un desfase horario entre su sistema y el servidor. Debe corregir la hora de su sistema antes de continuar."
+							+ "\nHora de su sistema: "
+							+ clientDate.toLocaleString()
+							+ "\nHora del servidor: "
+							+ serverDate.toLocaleString());
 		}
 	}
 }
@@ -408,21 +404,9 @@ AfirmaClient.prototype.getRemainingData = function() {
 		textResponse.descError = response.descError;
 		textResponse.time = response.time;
 		textResponse.id = response.id;
-		if (client.EOF == response.msg) {
-
-		}
 		if (client.EOF != response.msg && 0 == response.error) {
 			textResponse.msg = textResponse.msg + response.msg;
 			delete response.msg;
-			if (client.count == 30) {
-				if (client._errorCallback) {
-					client._errorCallback(textResponse, textStatus, jqXHR);
-				}
-				if (client._completeCallback) {
-					client._completeCallback(jqXHR, textStatus);
-				}
-				return;
-			}
 			client._invoker.invoke(
 			/* String */"getRemainingData",
 			/* Any */undefined,
@@ -445,6 +429,13 @@ AfirmaClient.prototype.getRemainingData = function() {
 				client._completeCallback(jqXHR, textStatus);
 			}
 		}
+		delete response.msg;
+		delete response.id;
+		delete response.time;
+		delete response.type;
+		delete response.error;
+		delete response.descError;
+		delete response;
 	};
 	client._invoker.invoke(
 	/* String */"getRemainingData",
@@ -467,14 +458,22 @@ AfirmaClient.prototype.addData = function(/* Any */parameters) {
 	textResponse.time = "";
 	textResponse.id = -1;
 	var jqXHR = undefined;
+	var param = new Object();
 	var innerSuccess = function( /* Any */response,/* String */
 	textStatus, /* jqXHR */jqXHR) {
 		textResponse.error = response.error;
 		textResponse.descError = response.descError;
 		textResponse.time = response.time;
 		textResponse.id = response.id;
-		if (0 == response.error) {
-			var param = new Object();
+		delete response.msg;
+		delete response.type;
+		delete response.id;
+		delete response.time;
+		delete response.error;
+		delete response.descError;
+		delete response;
+		delete param.data;
+		if (0 == textResponse.error) {
 			if (client.getData().length > client.BUFFER_SIZE) {
 				param.data = client.getData().substring(0, client.BUFFER_SIZE);
 				client.setData(client.getData().substring(client.BUFFER_SIZE));
@@ -497,18 +496,19 @@ AfirmaClient.prototype.addData = function(/* Any */parameters) {
 				if (client._completeCallback) {
 					client._completeCallback(jqXHR, textStatus);
 				}
+				delete textResponse.msg;
 			}
 		} else if (0 != response.error) {
 			client.setData("");
 			if (client._errorCallback) {
-				client._errorCallback(responseText, textStatus, jqXHR);
+				client._errorCallback(textResponse, textStatus, jqXHR);
 			}
 			if (client._completeCallback) {
 				client._completeCallback(jqXHR, textStatus);
 			}
+			delete textResponse.msg;
 		}
 	}
-	var param = new Object();
 	if (client.getData().length > client.BUFFER_SIZE) {
 		param.data = client.getData().substring(0, client.BUFFER_SIZE);
 		client.setData(client.getData().substring(client.BUFFER_SIZE));
@@ -536,16 +536,23 @@ AfirmaClient.prototype.getTextFromBase64 = function(/* Any */parameters) {
 	textResponse.time = "";
 	textResponse.id = -1;
 	textResponse.msg = "";
+	var param = new Object();
 	var innerSuccess = function( /* Any */response,/* String */
 	textStatus, /* jqXHR */jqXHR) {
 		textResponse.error = response.error;
 		textResponse.descError = response.descError;
 		textResponse.time = response.time;
 		textResponse.id = response.id;
-		if (0 == response.error) {
-			var param = new Object();
-			param.charset = parameters.charset;
-			textResponse.msg = textResponse.msg + response.msg;
+		textResponse.msg = textResponse.msg + response.msg;
+		delete response.msg;
+		delete response.id;
+		delete response.type;
+		delete response.time;
+		delete response.error;
+		delete response.descError;
+		delete response;
+		delete param.data;
+		if (0 == textResponse.error) {
 			if (client.getData().length > client.B64_BUFFER_SIZE) {
 				param.data = client.getData().substring(0,
 						client.B64_BUFFER_SIZE);
@@ -570,8 +577,10 @@ AfirmaClient.prototype.getTextFromBase64 = function(/* Any */parameters) {
 				if (client._completeCallback) {
 					client._completeCallback(jqXHR, textStatus);
 				}
+				delete textResponse.msg;
 			}
-		} else if (0 != response.error) {
+		} else if (0 != textResponse.error) {
+			responseText.msg = "";
 			client.setData("");
 			if (client._errorCallback) {
 				client._errorCallback(responseText, textStatus, jqXHR);
@@ -579,6 +588,7 @@ AfirmaClient.prototype.getTextFromBase64 = function(/* Any */parameters) {
 			if (client._completeCallback) {
 				client._completeCallback(jqXHR, textStatus);
 			}
+			delete textResponse.msg;
 		}
 	};
 	if (parameters && parameters.data) {
@@ -586,7 +596,6 @@ AfirmaClient.prototype.getTextFromBase64 = function(/* Any */parameters) {
 	} else {
 		client.setData("");
 	}
-	var param = new Object();
 	param.charset = parameters.charset;
 	if (client.getData().length > client.B64_BUFFER_SIZE) {
 		param.data = client.getData().substring(0, client.B64_BUFFER_SIZE);
@@ -635,6 +644,10 @@ AfirmaClient.prototype.getBase64FromText = function(/* Any */parameters) {
 				client.setData("");
 			}
 			delete response.msg;
+			delete response.time;
+			delete response.descError;
+			delete response.id;
+			delete response;
 			if ("" == param.plainText) {
 				if (client._successCallback) {
 					client._successCallback(textResponse, textStatus, jqXHR);
@@ -642,6 +655,7 @@ AfirmaClient.prototype.getBase64FromText = function(/* Any */parameters) {
 				if (client._completeCallback) {
 					client._completeCallback(jqXHR, textStatus);
 				}
+				delete textResponse.msg;
 			} else {
 				client._invoker.invoke(
 				/* String */"getBase64FromText",
@@ -651,15 +665,16 @@ AfirmaClient.prototype.getBase64FromText = function(/* Any */parameters) {
 				/* beforeSendCallback */undefined,
 				/* completeCallback */undefined);
 			}
-		} else if (0 != response.error) {
+		} else if (0 != textResponse.error) {
 			client.setData("");
 			responseText.msg = "";
 			if (client._errorCallback) {
-				client._errorCallback(responseText, textStatus, jqXHR);
+				client._errorCallback(textResponse, textStatus, jqXHR);
 			}
 			if (client._completeCallback) {
 				client._completeCallback(jqXHR, textStatus);
 			}
+			delete textResponse.msg;
 		} else {
 			if (client._successCallback) {
 				client._successCallback(textResponse, textStatus, jqXHR);
@@ -667,6 +682,7 @@ AfirmaClient.prototype.getBase64FromText = function(/* Any */parameters) {
 			if (client._completeCallback) {
 				client._completeCallback(jqXHR, textStatus);
 			}
+			delete textResponse.msg;
 		}
 	};
 	if (parameters && parameters.plainText) {
@@ -714,12 +730,21 @@ AfirmaClient.prototype.sign = function(/* Any */parameters) {
 		textResponse.id = response.id;
 		textResponse.msg = textResponse.msg + response.msg;
 		delete response.msg;
+		delete response.time;
+		delete response.descError;
+		delete response.id;
+		delete response;
 		var items = textResponse.msg.split("|");
 		if (items.length == 2) {
-			textResponse.msg = items[1];
 			textResponse.pemCertificate = items[0];
+			textResponse.msg = items[1];
+			delete items[0];
+			delete items[1];
+			delete items;
 		} else {
 			textResponse.msg = items[0];
+			delete items[0];
+			delete items;
 		}
 		if (client._successCallback) {
 			client._successCallback(textResponse, textStatus, jqXHR);
@@ -727,6 +752,7 @@ AfirmaClient.prototype.sign = function(/* Any */parameters) {
 		if (client._completeCallback) {
 			client._completeCallback(jqXHR, textStatus);
 		}
+		delete textResponse.msg;
 	};
 	var innerSucessCallback = function( /* Any */response,/* String */
 	textStatus, /* jqXHR */jqXHR) {
@@ -734,9 +760,15 @@ AfirmaClient.prototype.sign = function(/* Any */parameters) {
 		textResponse.descError = response.descError;
 		textResponse.time = response.time;
 		textResponse.id = response.id;
-		if (0 == response.error) {
+		if (response && response.msg) {
 			textResponse.msg = response.msg;
-			delete response.msg;
+		}
+		delete response.msg;
+		delete response.time;
+		delete response.descError;
+		delete response.id;
+		delete response;
+		if (0 == textResponse.error) {
 			var cRemaing = new AfirmaClient(client);
 			cRemaing.setBeforeSendCallback(undefined);
 			cRemaing.setCompleteCallback(undefined);
@@ -744,6 +776,7 @@ AfirmaClient.prototype.sign = function(/* Any */parameters) {
 			cRemaing.setSuccessCallback(remainingCallback);
 			cRemaing.getRemainingData();
 		} else {
+			delete textResponse.msg;
 			responseText.msg = "";
 			if (client._errorCallback) {
 				client._errorCallback(textResponse, textStatus, jqXHR);
@@ -783,14 +816,25 @@ AfirmaClient.prototype.coSign = function(/* Any */parameters) {
 		textResponse.descError = response.descError;
 		textResponse.time = response.time;
 		textResponse.id = response.id;
-		textResponse.msg = textResponse.msg + response.msg;
+		if (response && response.msg) {
+			textResponse.msg = response.msg;
+		}
 		delete response.msg;
+		delete response.time;
+		delete response.descError;
+		delete response.id;
+		delete response;
 		var items = textResponse.msg.split("|");
 		if (items.length == 2) {
-			textResponse.msg = items[1];
 			textResponse.pemCertificate = items[0];
+			textResponse.msg = items[1];
+			delete items[0];
+			delete items[1];
+			delete items;
 		} else {
 			textResponse.msg = items[0];
+			delete items[0];
+			delete items;
 		}
 		if (client._successCallback) {
 			client._successCallback(textResponse, textStatus, jqXHR);
@@ -798,6 +842,7 @@ AfirmaClient.prototype.coSign = function(/* Any */parameters) {
 		if (client._completeCallback) {
 			client._completeCallback(jqXHR, textStatus);
 		}
+		delete textResponse.msg;
 	};
 	var innerSucessCallback = function( /* Any */response,/* String */
 	textStatus, /* jqXHR */jqXHR) {
@@ -805,7 +850,12 @@ AfirmaClient.prototype.coSign = function(/* Any */parameters) {
 		textResponse.descError = response.descError;
 		textResponse.time = response.time;
 		textResponse.id = response.id;
-		if (0 == response.error) {
+		delete response.msg;
+		delete response.time;
+		delete response.descError;
+		delete response.id;
+		delete response;
+		if (0 == textResponse.error) {
 			textResponse.msg = response.msg;
 			delete response.msg;
 			var cRemaing = new AfirmaClient(client);
@@ -815,6 +865,7 @@ AfirmaClient.prototype.coSign = function(/* Any */parameters) {
 			cRemaing.setSuccessCallback(remainingCallback);
 			cRemaing.getRemainingData();
 		} else {
+			delete textResponse.msg;
 			responseText.msg = "";
 			if (client._errorCallback) {
 				client._errorCallback(textResponse, textStatus, jqXHR);
@@ -853,14 +904,25 @@ AfirmaClient.prototype.counterSign = function(/* Any */parameters) {
 		textResponse.descError = response.descError;
 		textResponse.time = response.time;
 		textResponse.id = response.id;
-		textResponse.msg = textResponse.msg + response.msg;
+		if (response && response.msg) {
+			textResponse.msg = response.msg;
+		}
 		delete response.msg;
+		delete response.time;
+		delete response.descError;
+		delete resonse.id;
+		delete resonse;
 		var items = textResponse.msg.split("|");
 		if (items.length == 2) {
-			textResponse.msg = items[1];
 			textResponse.pemCertificate = items[0];
+			textResponse.msg = items[1];
+			delete items[0];
+			delete items[1];
+			delete items;
 		} else {
 			textResponse.msg = items[0];
+			delete items[0];
+			delete items;
 		}
 		if (client._successCallback) {
 			client._successCallback(textResponse, textStatus, jqXHR);
@@ -875,9 +937,13 @@ AfirmaClient.prototype.counterSign = function(/* Any */parameters) {
 		textResponse.descError = response.descError;
 		textResponse.time = response.time;
 		textResponse.id = response.id;
-		if (0 == response.error) {
-			textResponse.msg = response.msg;
-			delete response.msg;
+		textResponse.msg = response.msg;
+		delete response.msg;
+		delete response.time;
+		delete response.descError;
+		delete response.id;
+		delete response;
+		if (0 == textResponse.error) {
 			var cRemaing = new AfirmaClient(client);
 			cRemaing.setBeforeSendCallback(undefined);
 			cRemaing.setCompleteCallback(undefined);
@@ -885,6 +951,7 @@ AfirmaClient.prototype.counterSign = function(/* Any */parameters) {
 			cRemaing.setSuccessCallback(remainingCallback);
 			cRemaing.getRemainingData();
 		} else {
+			delete textResponse.msg;
 			responseText.msg = "";
 			if (client._errorCallback) {
 				client._errorCallback(textResponse, textStatus, jqXHR);
@@ -925,6 +992,10 @@ AfirmaClient.prototype.getFileNameContentBase64 = function(/* Any */parameters) 
 		textResponse.id = response.id;
 		textResponse.msg = textResponse.msg + response.msg;
 		delete response.msg;
+		delete response.time;
+		delete response.descError;
+		delete response.id;
+		delete response;
 		var items = textResponse.msg.split("|");
 		textResponse.fileName = items[0];
 		textResponse.msg = items[1];
@@ -937,6 +1008,7 @@ AfirmaClient.prototype.getFileNameContentBase64 = function(/* Any */parameters) 
 		if (client._completeCallback) {
 			client._completeCallback(jqXHR, textStatus);
 		}
+		delete textResponse.msg;
 	};
 	var innerSucessCallback = function( /* Any */response,/* String */
 	textStatus, /* jqXHR */jqXHR) {
@@ -944,16 +1016,16 @@ AfirmaClient.prototype.getFileNameContentBase64 = function(/* Any */parameters) 
 		textResponse.descError = response.descError;
 		textResponse.time = response.time;
 		textResponse.id = response.id;
-		if (0 == response.error) {
-			textResponse.msg = response.msg;
-			delete response.msg;
-			var cRemaing = new AfirmaClient(client);
-			cRemaing.setErrorCallback(client.getWrappedErrorCallback());
-			cRemaing.setSuccessCallback(remainingCallback);
-			cRemaing.setBeforeSendCallback(undefined);
-			cRemaing.setCompleteCallback(undefined);
+		textResponse.msg = response.msg;
+		delete response.msg;
+		delete response.time;
+		delete response.descError;
+		delete response.id;
+		delete response;
+		if (0 == textResponse.error) {
 			cRemaing.getRemainingData();
 		} else {
+			delete textResponse.msg;
 			responseText.msg = "";
 			if (client._errorCallback) {
 				client._errorCallback(textResponse, textStatus, jqXHR);
@@ -963,6 +1035,11 @@ AfirmaClient.prototype.getFileNameContentBase64 = function(/* Any */parameters) 
 			}
 		}
 	};
+	var cRemaing = new AfirmaClient(client);
+	cRemaing.setErrorCallback(client.getWrappedErrorCallback());
+	cRemaing.setSuccessCallback(remainingCallback);
+	cRemaing.setBeforeSendCallback(undefined);
+	cRemaing.setCompleteCallback(undefined);
 	client._invoker.invoke(
 	/* String */"getFileNameContentBase64",
 	/* Any */parameters,
@@ -1016,7 +1093,6 @@ AfirmaClient.prototype.getMultiFileNameContentBase64 = function(
 				delete items[0];
 				delete items[1];
 				delete items;
-
 			}
 			delete response.msgs;
 			if (client._successCallback) {
@@ -1025,7 +1101,9 @@ AfirmaClient.prototype.getMultiFileNameContentBase64 = function(
 			if (client._completeCallback) {
 				client._completeCallback(jqXHR, textStatus);
 			}
+			delete textResponse.msgs;
 		} else {
+			delete textResponse.msgs;
 			responseText.msgs = [];
 			responseText.fileNames = [];
 			if (client._errorCallback) {
