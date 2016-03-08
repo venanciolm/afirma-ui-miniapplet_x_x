@@ -520,6 +520,25 @@ var Miniapplet13 = (function(window, undefined) {
 		/** completeCallback */
 		undefined);
 	}
+	function signOperation(signId, dataB64, algorithm, format, extraParams) {
+	}
+
+	var sign = function(dataB64, algorithm, format, params, successCallback,
+			errorCallback) {
+		signOperation("sign", dataB64, algorithm, format, params,
+				successCallback, errorCallback)
+	}
+	var coSign = function(signB64, dataB64, algorithm, format, params,
+			successCallback, errorCallback) {
+		signOperation("coSign", dataB64, algorithm, format, params,
+				successCallback, errorCallback)
+	}
+	var counterSign = function(signB64, algorithm, format, params,
+			successCallback, errorCallback) {
+		signOperation("counterSign", dataB64, algorithm, format, params,
+				successCallback, errorCallback)
+	}
+
 	/**
 	 * 
 	 * Metodos que publicamos del objeto MiniApplet
@@ -539,6 +558,9 @@ var Miniapplet13 = (function(window, undefined) {
 		 */
 		cargarMiniApplet : cargarMiniApplet,
 		exit : exit,
-		echo : echo
+		echo : echo,
+		sign : sign,
+		coSign : coSign,
+		counterSign : counterSign
 	}
 })(window, undefined);
