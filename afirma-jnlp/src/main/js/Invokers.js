@@ -394,14 +394,8 @@ PortByCookieInvoker.prototype.invoke = function(
 	var f_onreadystatechange = function(event) {
 		var retorno = false;
 		if (httpRequest.readyState == 4 && httpRequest.status == 200) {
-<<<<<<< HEAD
 			var retorno = item.isTestResponseValid(JSON
 					.parse(httpRequest.responseText));
-=======
-			var response = item.isTestResponseValid(JSON
-					.parse(httpRequest.responseText));
-			retorno = response.error == 0;
->>>>>>> branch 'development' of https://github.com/venanciolm/afirma-ui-miniapplet_x_x.git
 		}
 		console.log("Valor respuesta       : " + retorno);
 		console.log("httpRequest.readyState: " + httpRequest.readyState);
