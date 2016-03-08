@@ -37,6 +37,7 @@ var InvokerWithState = function(protocol) {
 	this.STATUS_STRING["es_ES"][4] = "El proceso ha sido finalizado y la respuesta está disponible";
 	this.DEFAULT_LOCALE = this.STATUS_STRING["es_ES"];
 	this._PREFIX_APP = protocol;
+	this._SERVER = "https://localhost";
 	this._VALID_CHARS_TO_ID = "1234567890abcdefghijklmnopqrstuwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	this._currentPort = "";
 	this._sessionId = "";
@@ -51,29 +52,23 @@ var InvokerWithState = function(protocol) {
 	this._invokers[1] = new PortByCookieInvoker(this);
 	this._invokers[2] = new PortDetectedInvoker(this);
 	this._state = 0;
-	if (this.readCookie(this._PREFIX_APP + "_port")) {
-		console.log("Hemos encontrado _port: "
-				+ this.readCookie(this._PREFIX_APP + "_port"));
-	} else {
-		console.log("No se ha encontrado: " + this._PREFIX_APP + "_port");
-	}
-	if (this.readCookie(this._PREFIX_APP + "_session")) {
-		console.log("Hemos encontrado _session: "
-				+ this.readCookie(this._PREFIX_APP + "_session"));
-	} else {
-		console.log("No se ha encontrado: " + this._PREFIX_APP + "_session");
-	}
-	if (this.readCookie(this._PREFIX_APP + "_port")
-			&& this.readCookie(this._PREFIX_APP + "_session")) {
-		this._currentPort = this.readCookie(this._PREFIX_APP + "_port");
-		this._sessionId = this.readCookie(this._PREFIX_APP + "_session");
+	var cookiePort = this.readCookie(this._PREFIX_APP + "_port");
+	var cookieSession = this.readCookie(this._PREFIX_APP + "_session");
+	if (cookiePort && cookieSession) {
+		this._currentPort = cookiePort;
+		this._sessionId = cookieSession;
+		// console.log("Cambiando estado de: " + this._state + " -> 1 ["
+		// + cookiePort + ", " + cookieSession + "]");
 		this._state = 1;
-	} else {
-		console.log("No hay cookies ... así que empezamos!");
 	}
 }
 InvokerWithState.constructor = InvokerWithState;
 InvokerWithState.prototype = new InvokerAbstract();
+InvokerWithState.prototype.getURL = function(command, port) {
+	var uRL = this._SERVER + ":" + port + "/" + this.getContext() + "/"
+			+ command;
+	return uRL;
+}
 InvokerWithState.prototype.generateNewIdSession = function() {
 	var ID_LENGTH = 20;
 	var random = "";
@@ -94,19 +89,10 @@ InvokerWithState.prototype.generateNewIdSession = function() {
 	}
 	return random;
 }
-InvokerWithState.prototype.getURL = function(command, port) {
-	var uRL = "https://localhost:" + port + "/" + this.getContext() + "/"
-			+ command;
-	return uRL;
-}
 InvokerWithState.prototype.getTestURL = function(port) {
 	return this.getURL(this.getTestCommand(), port);
 }
 InvokerWithState.prototype.isTestResponseValid = function(obj) {
-	console.log("Estamos llamando al validador de qué todo va bien");
-	testResponseValid = false;
-	console.log("Obj: " + obj);
-	console.log("Obj: " + obj.error);
 	if (obj && obj.error == 0 && obj.sessionId == this._sessionId) {
 		delete obj.msg;
 		delete obj.type;
@@ -131,7 +117,8 @@ InvokerWithState.prototype.getContext = function() {
 // ____________________________________________________________________________
 
 InvokerWithState.prototype.toString = function() {
-	return "InvokerWithState={state=" + this._state + "}";
+	return "InvokerWithState={state=" + this._state + ", port="
+			+ this._currentPort + ", sessionId=" + this._sessionId + "}";
 }
 InvokerWithState.prototype.changeState = function(
 /* Estado */state,
@@ -141,8 +128,8 @@ InvokerWithState.prototype.changeState = function(
 /* Any */parameters,
 /* On Success */successCallback, errorCallback, beforeSendCallback,
 		completeCallback) {
-	console.log("Cambiando estado de: " + this._state + " -> " + state);
-	console.log("Port: " + port + ", sessionid: " + sessionId);
+	// console.log("Cambiando estado de: " + this._state + " -> " + state + " ["
+	// + port + ", " + sessionId + "]");
 	this._currentPort = port;
 	this._sessionId = sessionId;
 	this._state = state;
@@ -209,9 +196,6 @@ InvokerWithState.prototype.getRandomPorts = function() {
 				.floor((Math.random() * (this._MAX_PORT - this._MIN_PORT)))
 				+ this._MIN_PORT;
 	}
-	// TODO - Fijamos de momento el puerto
-	// ports[0] = 9999;
-	console.log("Retornando: " + ports);
 	return ports;
 }
 InvokerWithState.prototype.openNativeApp = function(ports) {
@@ -319,7 +303,6 @@ SearchPortInvoker.prototype.executeTestConnect = function(actualInvoker, port,
 		}
 		if (httpRequest.readyState == 4 && httpRequest.status == 200 && retorno
 				&& !actualInvoker._connection) {
-			console.log("puerto asignado puerto:" + port);
 			//
 			//
 			// hemos encontrado el puerto!!!
@@ -328,24 +311,18 @@ SearchPortInvoker.prototype.executeTestConnect = function(actualInvoker, port,
 					parameters, successCallback, errorCallback,
 					beforeSendCallback, completeCallback);
 		} else if (timeoutResetCounter == 0) {
-			console.log("Hemos terminado!!!! " + port);
 			// Si hemos agotado todos los reintentos consideramos que la
 			// aplicacion no esta instalada
 			if (errorCallback) {
 				errorCallback(
 						"es.gob.afirma.standalone.ApplicationNotFoundException",
 						"No se ha podido conectar con AutoFirma.");
-				console
-						.log("es.gob.afirma.standalone.ApplicationNotFoundException");
-				console.log("No se ha podido conectar con AutoFirma.");
 			}
 			return;
 		}
 		// Aun quedan reintentos
 		else if (httpRequest.readyState == 4) {
 			--timeoutResetCounter;
-			console.log("Quendan " + timeoutResetCounter + ", en el puerto: "
-					+ port + ", estado: " + actualInvoker._parent._state);
 			setTimeout(actualInvoker.executeTestConnect,
 					actualInvoker._parent._LAUNCHING_TIME, actualInvoker, port,
 					sessionId, timeoutResetCounter, command, parameters,
@@ -397,16 +374,11 @@ PortByCookieInvoker.prototype.invoke = function(
 			var retorno = item.isTestResponseValid(JSON
 					.parse(httpRequest.responseText));
 		}
-		console.log("Valor respuesta       : " + retorno);
-		console.log("httpRequest.readyState: " + httpRequest.readyState);
-		console.log("httpRequest.status    : " + httpRequest.status);
 		if (httpRequest.readyState == 4 && httpRequest.status == 200 && retorno) {
 			//
 			//
 			// hemos encontrado el puerto!!!
 			//
-			console.log("Hemos encontrado el puerto: " + testPort + ", "
-					+ testSession);
 			item.changeState(2, testPort, testSession, command, parameters,
 					successCallback, errorCallback, beforeSendCallback,
 					completeCallback);
@@ -415,8 +387,6 @@ PortByCookieInvoker.prototype.invoke = function(
 			//
 			// debemos buscar un nuevo puerto!
 			//
-			console.log("NO hemos encontrado el puerto: " + item._currentPort
-					+ ", " + item._sessionId);
 			item.changeState(0, "", "", command, parameters, successCallback,
 					errorCallback, beforeSendCallback, completeCallback);
 		}
@@ -459,12 +429,10 @@ PortDetectedInvoker.prototype.invoke = function(
 	httpRequest.setRequestHeader("Accept", "application/json; charset=utf-8");
 	var item = this._parent;
 	var f_onreadystatechange = function(event) {
-		console.log(item.DEFAULT_LOCALE[httpRequest.readyState]);
 		var retorno = false;
 		if (httpRequest.readyState == 4 && httpRequest.status == 200) {
 			response = JSON.parse(httpRequest.responseText);
 			if (response.error == 0) {
-				console.log("Estableciendo cookies!");
 				item.createCookie(item._PREFIX_APP + "_port",
 						item._currentPort, item._MINUTES_TIMEOUT);
 				item.createCookie(item._PREFIX_APP + "_session",
