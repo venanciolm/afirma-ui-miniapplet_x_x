@@ -45,12 +45,13 @@ var InvokerWithState = function(protocol) {
 	this._MIN_PORT = 49152;
 	this._MAX_PORT = 65535;
 	this._NUM_PORTS = 3;
-	this._LAUNCHING_TIME = 6000;
-	this._CONNECTION_RETRIES = 15;
+	this._LAUNCHING_TIME = 5000;
+	this._CONNECTION_RETRIES = 20;
 	this._invokers = [];
 	this._invokers[0] = new SearchPortInvoker(this);
 	this._invokers[1] = new PortByCookieInvoker(this);
 	this._invokers[2] = new PortDetectedInvoker(this);
+	this._invokers[3] = new ErrorInvoker(this);
 	this._state = 0;
 	var cookiePort = this.readCookie(this._PREFIX_APP + "_port");
 	var cookieSession = this.readCookie(this._PREFIX_APP + "_session");
@@ -311,13 +312,9 @@ SearchPortInvoker.prototype.executeTestConnect = function(actualInvoker, port,
 					parameters, successCallback, errorCallback,
 					beforeSendCallback, completeCallback);
 		} else if (timeoutResetCounter == 0) {
-			// Si hemos agotado todos los reintentos consideramos que la
-			// aplicacion no esta instalada
-			if (errorCallback) {
-				errorCallback(
-						"es.gob.afirma.standalone.ApplicationNotFoundException",
-						"No se ha podido conectar con AutoFirma.");
-			}
+			actualInvoker._parent.changeState(3, "", "", command, parameters,
+					successCallback, errorCallback, beforeSendCallback,
+					completeCallback);
 			return;
 		}
 		// Aun quedan reintentos
@@ -457,7 +454,46 @@ PortDetectedInvoker.prototype.invoke = function(
 		}
 	}
 	httpRequest.onreadystatechange = f_onreadystatechange;
-	httpRequest.send(parameters);
+	httpRequest.send(request);
+}
+/**
+ * 
+ * Ejecución con error
+ * 
+ * @param {InvokerWithState}
+ *            parent
+ * 
+ * ____________________________________________________________________________
+ */
+
+var ErrorInvoker = function(parent) {
+	this._parent = parent;
+	this._error = 0;
+}
+ErrorInvoker.prototype = new InvokerAbstract();
+ErrorInvoker.constructor = ErrorInvoker;
+ErrorInvoker.prototype.toString = function() {
+	return "ErrorInvoker={}";
+}
+ErrorInvoker.prototype.invoke = function(
+/* String */command,
+/* Any */parameters,
+/**/successCallback,
+/**/errorCallback,
+/**/beforeSendCallback,
+/**/completeCallback) {
+	var item = this._parent;
+	this._error += 1;
+	if (this._error == item._NUM_PORTS) {
+		if (errorCallback) {
+			errorCallback("Error de conexión",
+					"No se ha podido conectar con el Miniapplet.");
+		}
+	} else if (this._error > item._NUM_PORTS) {
+		this._error = 0;
+		item.changeState(0, "", "", command, parameters, successCallback,
+				errorCallback, beforeSendCallback, completeCallback);
+	}
 }
 
 var Miniapplet13 = (function(window, undefined) {
@@ -479,7 +515,7 @@ var Miniapplet13 = (function(window, undefined) {
 	var DEFAULT_LOCALE = LOCALIZED_STRINGS["es_ES"];
 	var currentLocale = DEFAULT_LOCALE;
 	var BUFFER_SIZE = 1024 * 1024;
-	var B64_BUFFER_SIZE = this.BUFFER_SIZE * 3 / 4;
+	var B64_BUFFER_SIZE = BUFFER_SIZE * 3 / 4;
 	var EOF = "%%EOF%%";
 	/**
 	 * 
@@ -520,7 +556,145 @@ var Miniapplet13 = (function(window, undefined) {
 		/** completeCallback */
 		undefined);
 	}
-	function signOperation(signId, dataB64, algorithm, format, extraParams) {
+	var setStickySignatory = function(sticky, successCallback, errorCallback) {
+		var parameters = new Object();
+		parameters.sticky = sticky;
+		var innerCallBack = function() {
+
+		}
+		invoker.invoke(
+		/** command */
+		"setStickySignatory",
+		/** parameters */
+		parameters,
+		/** successCallback */
+		undefined,
+		/** errorCallback */
+		undefined,
+		/** beforeSendCallback */
+		undefined,
+		/** completeCallback */
+		undefined);
+	}
+	var getBase64FromText = function(plainText, charset, maSuccessCallback,
+			maErrorCallback) {
+		var textResponse = new Object();
+		textResponse.error = -2;
+		textResponse.descError = "";
+		textResponse.time = "";
+		textResponse.id = -1;
+		textResponse.msg = "";
+		textResponse.plainText = plainText;
+		textResponse.charset = charset;
+		var param = new Object();
+		param.charset = charset;
+		var innerSuccess = function( /* Any */response,/* String */
+		textStatus, /* jqXHR */jqXHR) {
+			textResponse.error = response.error;
+			textResponse.descError = response.descError;
+			textResponse.time = response.time;
+			textResponse.id = response.id;
+			if (response.msg && response.msg.length > 0 && 0 == response.error) {
+				textResponse.msg = textResponse.msg + response.msg;
+				delete response.msg;
+				delete response.time;
+				delete response.descError;
+				delete response.id;
+				delete response;
+				param.plainText = "";
+				if (textResponse.plainText) {
+					if (textResponse.plainText.length > B64_BUFFER_SIZE) {
+						param.plainText = textResponse.plainText.substring(0,
+								B64_BUFFER_SIZE);
+						textResponse.plainText = textResponse.plainText
+								.substring(B64_BUFFER_SIZE);
+					} else {
+						param.plainText = textResponse.plainText;
+						delete textResponse.plainText;
+					}
+				}
+				if ("" == param.plainText) {
+					if (maSuccessCallback) {
+						maSuccessCallback(textResponse, textStatus, jqXHR);
+					}
+					delete textResponse.msg;
+				} else {
+					invoker.invoke(
+					/** String */
+					"getBase64FromText",
+					/** Any */
+					param,
+					/** successCallback */
+					innerSuccess,
+					/** errorCallback */
+					undefined,
+					/** beforeSendCallback */
+					undefined,
+					/** completeCallback */
+					undefined);
+				}
+			} else if (0 != textResponse.error) {
+				delete textResponse.plainText;
+				responseText.msg = "";
+				if (maErrorCallback) {
+					maErrorCallback(textResponse, textStatus, jqXHR);
+				}
+				delete textResponse.msg;
+			} else {
+				if (maSuccessCallback) {
+					maSuccessCallback(textResponse, textStatus, jqXHR);
+				}
+				delete textResponse.msg;
+			}
+		};
+		if (textResponse.plainText.length > B64_BUFFER_SIZE) {
+			param.plainText = textResponse.plainText.substring(0,
+					B64_BUFFER_SIZE);
+			textResponse.plainText = textResponse.plainText
+					.substring(B64_BUFFER_SIZE);
+		} else {
+			param.plainText = textResponse.plainText;
+			delete textResponse.plainText;
+		}
+		invoker.invoke(
+		/** String */
+		"getBase64FromText",
+		/** Any */
+		param,
+		/** successCallback */
+		innerSuccess,
+		/** errorCallback */
+		undefined,
+		/** beforeSendCallback */
+		undefined,
+		/** completeCallback */
+		undefined);
+	}
+	function setDataRecursive(textResponse, successCallback, errorCallback) {
+
+	}
+	function buildDataRecursive(textResponse, successCallback, errorCallback) {
+
+	}
+	function signOperation(signId, dataB64, algorithm, format, extraParams,
+			successCallback, errorCallback) {
+		var textResponse = new Object();
+		textResponse.error = -2;
+		textResponse.descError = "";
+		textResponse.time = "";
+		textResponse.id = -1;
+		textResponse.msg = "";
+		textResponse.pemCertificate = "";
+		textResponse.base64 = dataB64;
+		var params = new Object();
+		params.algorithm = algorithm;
+		params.format = format;
+		params.extraParams = extraParams;
+		if (textResponse.base64 && textResponse.base64.length == 0) {
+
+		} else {
+
+		}
 	}
 
 	var sign = function(dataB64, algorithm, format, params, successCallback,
@@ -556,11 +730,12 @@ var Miniapplet13 = (function(window, undefined) {
 		 * 
 		 * Cliente en si!
 		 */
-		cargarMiniApplet : cargarMiniApplet,
+		cargarMiniApplet : cargarMiniApplet,// deprecated
 		exit : exit,
 		echo : echo,
 		sign : sign,
 		coSign : coSign,
-		counterSign : counterSign
+		counterSign : counterSign,
+		getBase64FromText : getBase64FromText
 	}
 })(window, undefined);
