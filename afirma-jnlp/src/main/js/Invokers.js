@@ -1132,7 +1132,7 @@ var Miniapplet13 = (function(window, undefined) {
 				maErrorCallback(/* String */undefined,/* String */undefined);
 			}
 			if (completeCallback) {
-				completeCallback(undefined, textResponse, xmlReq);
+				completeCallback(params, textResponse, xmlReq);
 			}
 			delete textResponse.error;
 			delete textResponse.descError;
@@ -1148,7 +1148,7 @@ var Miniapplet13 = (function(window, undefined) {
 				maSuccessCallback(textResponse.msg);
 			}
 			if (completeCallback) {
-				completeCallback(undefined, textResponse, xmlReq);
+				completeCallback(params, textResponse, xmlReq);
 			}
 			delete textResponse.error;
 			delete textResponse.descError;
@@ -1179,7 +1179,7 @@ var Miniapplet13 = (function(window, undefined) {
 			undefined);
 		}
 		if (beforeSendCallback) {
-			beforeSendCallback(undefined, undefined);
+			beforeSendCallback(params, undefined);
 		}
 		buildDataRecursive(textResponse, buildDataSuccessCallback,
 				errorCallback);
@@ -1209,21 +1209,207 @@ var Miniapplet13 = (function(window, undefined) {
 		// throw "Not Supported!";
 		// do nothing
 	}
-	var getFileNameContentBase64 = function(title, extensions, description,
-			filePath, maSuccessCallback, maErrorCallback, beforeSendCallback,
-			completeCallback) {
-		throw "not Implemented yet";
+	var saveDataToFile = function(dataB64, title, fileName, extension,
+			description, maSuccessCallback, maErrorCallback,
+			beforeSendCallback, completeCallback) {
+		var textResponse = new Object();
+		textResponse.error = -2;
+		textResponse.descError = "";
+		textResponse.time = "";
+		textResponse.id = -1;
+		textResponse.msg = "";
+		textResponse.dataToSend = dataB64;
+		var params = new Object();
+		params.title = title;
+		params.fileName = fileName;
+		params.extension = extension;
+		params.description = description;
+		var errorCallback = function(item, textResponse, xmlReq) {
+			if (maErrorCallback) {
+				maErrorCallback(/* String */undefined,/* String */undefined);
+			}
+			if (completeCallback) {
+				completeCallback(params, textResponse, xmlReq);
+			}
+			delete textResponse.error;
+			delete textResponse.descError;
+			delete textResponse.time;
+			delete textResponse.id;
+			delete textResponse.type;
+			delete textResponse.dataToSend;
+			delete textResponse.msg;
+			delete textResponse;
+		}
+		var saveDataToFileSuccess = function(textResponse, xmlReq) {
+			if (maSuccessCallback) {
+				maSuccessCallback(textResponse.msg);
+			}
+			if (completeCallback) {
+				completeCallback(params, textResponse, xmlReq);
+			}
+			delete textResponse.error;
+			delete textResponse.descError;
+			delete textResponse.time;
+			delete textResponse.id;
+			delete textResponse.type;
+			delete textResponse.dataToSend;
+			delete textResponse.msg;
+			delete textResponse;
+		}
+		var buildDataSuccessCallback = function(item, xmlReq) {
+			invoker.invoke(
+			/** String */
+			"saveDataToFile",
+			/** Any */
+			params,
+			/** successCallback */
+			signOperationSuccess,
+			/** errorCallback */
+			errorCallback,
+			/** beforeSendCallback */
+			undefined,
+			/** completeCallback */
+			undefined);
+		}
+		if (beforeSendCallback) {
+			beforeSendCallback(params, undefined);
+		}
+		buildDataRecursive(textResponse, buildDataSuccessCallback,
+				errorCallback);
+	}
+	var getFileNameContentBase64 = function(item, title, extensions,
+			description, filePath, maSuccessCallback, maErrorCallback,
+			beforeSendCallback, completeCallback) {
+		var textResponse = new Object();
+		textResponse.error = -2;
+		textResponse.descError = "";
+		textResponse.time = "";
+		textResponse.id = -1;
+		textResponse.msg = "";
+		var params = new Object();
+		params.title = title;
+		params.extensions = extensions;
+		params.description = description;
+		params.filePath = filePath;
+		var errorCallback = function(item, textResponse, xmlReq) {
+			if (maErrorCallback) {
+				maErrorCallback(/* String */undefined,/* String */undefined);
+			}
+			if (completeCallback) {
+				completeCallback(params, textResponse, xmlReq);
+			}
+			delete textResponse.error;
+			delete textResponse.descError;
+			delete textResponse.time;
+			delete textResponse.id;
+			delete textResponse.type;
+			delete textResponse.dataToSend;
+			delete textResponse.msg;
+			delete textResponse;
+		}
+		var retriveDataRecursiveCallback = function(textResponse, xmlReq) {
+			if (maSuccessCallback) {
+				maSuccessCallback(textResponse.msg);
+			}
+			if (completeCallback) {
+				completeCallback(params, textResponse, xmlReq);
+			}
+			delete textResponse.error;
+			delete textResponse.descError;
+			delete textResponse.time;
+			delete textResponse.id;
+			delete textResponse.type;
+			delete textResponse.dataToSend;
+			delete textResponse.msg;
+			delete textResponse;
+		}
+		var getFileNameContentBase64Callback = function(textResponse, xmlReq) {
+			retriveDataRecursive(response, retriveDataRecursiveCallback,
+					errorCallback);
+		}
+		if (beforeSendCallback) {
+			beforeSendCallback(params, undefined);
+		}
+		invoker.invoke(
+		/** String */
+		itemId,
+		/** Any */
+		params,
+		/** successCallback */
+		getFileNameContentBase64Callback,
+		/** errorCallback */
+		errorCallback,
+		/** beforeSendCallback */
+		undefined,
+		/** completeCallback */
+		undefined);
 	}
 	var getMultiFileNameContentBase64 = function(title, extensions,
 			description, filePath, maSuccessCallback, maErrorCallback,
 			beforeSendCallback, completeCallback) {
-		throw "not Implemented yet";
+		var textResponse = new Object();
+		textResponse.error = -2;
+		textResponse.descError = "";
+		textResponse.time = "";
+		textResponse.id = -1;
+		textResponse.msgs = [];
+		var params = new Object();
+		params.title = title;
+		params.extensions = extensions;
+		params.description = description;
+		params.filePath = filePath;
+		var errorCallback = function(item, textResponse, xmlReq) {
+			if (maErrorCallback) {
+				maErrorCallback(/* String */undefined,/* String */undefined);
+			}
+			if (completeCallback) {
+				completeCallback(params, textResponse, xmlReq);
+			}
+			delete textResponse.error;
+			delete textResponse.descError;
+			delete textResponse.time;
+			delete textResponse.id;
+			delete textResponse.type;
+			delete textResponse.dataToSend;
+			delete textResponse.msg;
+			delete textResponse;
+		}
+		var getMultiFileNameContentBase64Callback = function(textResponse,
+				xmlReq) {
+			if (maSuccessCallback) {
+				maSuccessCallback(textResponse.msgs);
+			}
+			if (completeCallback) {
+				completeCallback(params, textResponse, xmlReq);
+			}
+			delete textResponse.error;
+			delete textResponse.descError;
+			delete textResponse.time;
+			delete textResponse.id;
+			delete textResponse.type;
+			delete textResponse.dataToSend;
+			delete textResponse.msgs;
+			delete textResponse;
+		}
+		invoker.invoke(
+		/** command */
+		"getMultiFileNameContentBase64",
+		/** parameters */
+		params,
+		/** successCallback */
+		getMultiFileNameContentBase64Callback,
+		/** errorCallback */
+		errorCallback,
+		/** beforeSendCallback */
+		beforeSendCallback,
+		/** completeCallback */
+		completeCallback);
 	}
-	var saveDataToFile = function(dataB64, title, fileName, extension,
-			description, maSuccessCallback, maErrorCallback,
-			beforeSendCallback, completeCallback) {
-		throw "not Implemented yet";
-
+	var setAlert = function(fn_alert) {
+		invoker.alert = fn_alert;
+	}
+	var alert = function(texto) {
+		invoker.alert(texto);
 	}
 	/**
 	 * 
@@ -1257,7 +1443,12 @@ var Miniapplet13 = (function(window, undefined) {
 		getTextFromBase64 : getTextFromBase64,
 		getFileNameContentBase64 : getFileNameContentBase64,
 		saveDataToFile : saveDataToFile,
-		getMultiFileNameContentBase64 : getMultiFileNameContentBase64
-
+		getMultiFileNameContentBase64 : getMultiFileNameContentBase64,
+		setAlert : setAlert,
+		alert : alert
 	}
 })(window, undefined);
+
+if (window && window.bootbox && bootbox) {
+	Miniapplet13.setAlert(bootbox.alert);
+}

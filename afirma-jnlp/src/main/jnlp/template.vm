@@ -8,7 +8,7 @@
 		<all-permissions/>
 	</security>
 	<resources>
-		<j2se version="1.7+" initial-heap-size="32m" max-heap-size="128m" />
+		<j2se version="1.7+" java-vm-args="-Xms1024m -Xmx1024m -XX:PermSize=256m -XX:MaxPermSize=256m" />
 		<property name="jnlp.versionEnabled" value="false"/>
     $dependencies
 	</resources>
