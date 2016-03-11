@@ -1277,7 +1277,7 @@ var Miniapplet13 = (function(window, undefined) {
 		buildDataRecursive(textResponse, buildDataSuccessCallback,
 				errorCallback);
 	}
-	var getFileNameContentBase64 = function(item, title, extensions,
+	var getFileNameContentBase64 = function( title, extensions,
 			description, filePath, maSuccessCallback, maErrorCallback,
 			beforeSendCallback, completeCallback) {
 		var textResponse = new Object();
@@ -1332,7 +1332,7 @@ var Miniapplet13 = (function(window, undefined) {
 		}
 		invoker.invoke(
 		/** String */
-		itemId,
+		"getFileNameContentBase64",
 		/** Any */
 		params,
 		/** successCallback */
