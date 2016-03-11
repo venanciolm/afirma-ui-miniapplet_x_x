@@ -1,6 +1,11 @@
 /**
  * 
  * Prototipo de un invoker
+ * 
+ * @constructor
+ * @this {InvokerAbstract}
+ * @return {InvokerAbstract}
+ * 
  * ____________________________________________________________________________
  */
 var InvokerAbstract = function() {
@@ -10,6 +15,21 @@ InvokerAbstract.constructor = InvokerAbstract;
 InvokerAbstract.prototype.toString = function() {
 	return "InvokerAbstract={}";
 }
+/**
+ * @this {InvokerAbstract}
+ * @param {string}
+ *            command
+ * @param {Object}
+ *            parameters
+ * @param {Function}
+ *            successCallback
+ * @param {Function}
+ *            errorCallback
+ * @param {Function}
+ *            beforeSendCallback
+ * @param {Function}
+ *            completeCallback
+ */
 InvokerAbstract.prototype.invoke = function(/* String */command, /* Any */
 parameters, successCallback, errorCallback, beforeSendCallback,
 		completeCallback) {
@@ -22,8 +42,11 @@ parameters, successCallback, errorCallback, beforeSendCallback,
  * Es un manejador, que no hace nada, simplemente es un punto comun que maneja
  * un determinado estado.
  * 
+ * @constructor
+ * @this {InvokerWithState}
  * @param {String}
  *            protocol
+ * @return {InvokerWithState}
  * 
  * ____________________________________________________________________________
  */
@@ -89,6 +112,11 @@ InvokerWithState.prototype.generateNewIdSession = function() {
 				% this._VALID_CHARS_TO_ID.length));
 	}
 	return random;
+}
+InvokerWithState.prototype.alert = function(
+/** {String} */
+text) {
+	alert(text);
 }
 InvokerWithState.prototype.getTestURL = function(port) {
 	return this.getURL(this.getTestCommand(), port);
@@ -256,14 +284,32 @@ InvokerWithState.prototype.openUrl = function(url) {
  * 
  * Realiza la búsqueda inicial de puertos para la conexión por protocolo
  * 
+ * @constructor
+ * @this {SearchPortInvoker}
  * @param {InvokerWithState}
  *            parent
+ * @return {SearchPortInvoker}
  * 
  * ____________________________________________________________________________
  */
 var SearchPortInvoker = function(parent) {
 	this._parent = parent;
 }
+/**
+ * @this {SearchPortInvoker}
+ * @param {string}
+ *            command
+ * @param {Object}
+ *            parameters
+ * @param {Function}
+ *            successCallback
+ * @param {Function}
+ *            errorCallback
+ * @param {Function}
+ *            beforeSendCallback
+ * @param {Function}
+ *            completeCallback
+ */
 SearchPortInvoker.constructor = SearchPortInvoker;
 SearchPortInvoker.prototype = new InvokerAbstract();
 SearchPortInvoker.prototype.invoke = function(
@@ -336,12 +382,14 @@ SearchPortInvoker.prototype.executeTestConnect = function(actualInvoker, port,
  * 
  * Ejecución incial con puerto asignado por cookie
  * 
+ * @constructor
+ * @this {PortByCookieInvoker}
  * @param {InvokerWithState}
  *            parent
+ * @return {PortByCookieInvoker}
  * 
  * ____________________________________________________________________________
  */
-
 var PortByCookieInvoker = function(parent) {
 	this._parent = parent;
 }
@@ -350,6 +398,21 @@ PortByCookieInvoker.constructor = PortByCookieInvoker;
 PortByCookieInvoker.prototype.toString = function() {
 	return "PortByCookieInvoker={}";
 }
+/**
+ * @this {PortByCookieInvoker}
+ * @param {string}
+ *            command
+ * @param {Object}
+ *            parameters
+ * @param {Function}
+ *            successCallback
+ * @param {Function}
+ *            errorCallback
+ * @param {Function}
+ *            beforeSendCallback
+ * @param {Function}
+ *            completeCallback
+ */
 PortByCookieInvoker.prototype.invoke = function(
 /* String */command,
 /* Any */parameters,
@@ -395,8 +458,11 @@ PortByCookieInvoker.prototype.invoke = function(
  * 
  * Ejecución normal con puerto asignado
  * 
+ * @constructor
+ * @this {PortDetectedInvoker}
  * @param {InvokerWithState}
  *            parent
+ * @returns {PortDetectedInvoker}
  * 
  * ____________________________________________________________________________
  */
@@ -408,6 +474,21 @@ PortDetectedInvoker.constructor = PortDetectedInvoker;
 PortDetectedInvoker.prototype.toString = function() {
 	return "PortDetectedInvoker={}";
 }
+/**
+ * @this {PortDetectedInvoker}
+ * @param {string}
+ *            command
+ * @param {Object}
+ *            parameters
+ * @param {Function}
+ *            successCallback
+ * @param {Function}
+ *            errorCallback
+ * @param {Function}
+ *            beforeSendCallback
+ * @param {Function}
+ *            completeCallback
+ */
 PortDetectedInvoker.prototype.invoke = function(
 /* String */command,
 /* Any */parameters,
@@ -427,6 +508,9 @@ PortDetectedInvoker.prototype.invoke = function(
 	var item = this._parent;
 	var f_onreadystatechange = function(event) {
 		var retorno = false;
+		if (beforeSendCallback) {
+			beforeSendCallback(parameters, httpRequest);
+		}
 		if (httpRequest.readyState == 4 && httpRequest.status == 200) {
 			response = JSON.parse(httpRequest.responseText);
 			if (response.error == 0) {
@@ -435,12 +519,15 @@ PortDetectedInvoker.prototype.invoke = function(
 				item.createCookie(item._PREFIX_APP + "_session",
 						item._sessionId, item._MINUTES_TIMEOUT);
 				if (successCallback) {
-					successCallback(response);
+					successCallback(response, httpRequest);
 				}
 			} else {
 				if (errorCallback) {
-					successCallback(response);
+					errorCallback(parameters, response, httpRequest);
 				}
+			}
+			if (completeCallback) {
+				completeCallback(parameters, response, httpRequest);
 			}
 		} else if (httpRequest.readyState == 4) {
 			//
@@ -448,7 +535,8 @@ PortDetectedInvoker.prototype.invoke = function(
 			// Esto es un error ... vamos a ver como lo solucionamos
 			// lo mejor ... es empezar de nuevo!!!
 			//
-			item.changeState(0, "", "", command, parameters, successCallback,
+			item._invokers[3]._error = item._NUM_PORTS - 1;
+			item.changeState(3, "", "", command, parameters, successCallback,
 					errorCallback, beforeSendCallback, completeCallback);
 			return;
 		}
@@ -460,8 +548,11 @@ PortDetectedInvoker.prototype.invoke = function(
  * 
  * Ejecución con error
  * 
+ * @constructor
+ * @this {ErrorInvoker}
  * @param {InvokerWithState}
  *            parent
+ * @return {ErrorInvoker}
  * 
  * ____________________________________________________________________________
  */
@@ -486,8 +577,7 @@ ErrorInvoker.prototype.invoke = function(
 	this._error += 1;
 	if (this._error == item._NUM_PORTS) {
 		if (errorCallback) {
-			errorCallback("Error de conexión",
-					"No se ha podido conectar con el Miniapplet.");
+			errorCallback(parameters, undefined, undefined);
 		}
 	} else if (this._error > item._NUM_PORTS) {
 		this._error = 0;
@@ -500,7 +590,14 @@ var Miniapplet13 = (function(window, undefined) {
 	var VERSION = "1.3";
 	var invoker = new InvokerWithState("afirmajnlp");
 	var LOCALIZED_STRINGS = new Array();
+	var locale = "es";
 	LOCALIZED_STRINGS["es_ES"] = {
+		checktime_warn : "Se ha detectado un desfase horario entre su sistema y el servidor. Se recomienda que se corrija antes de pulsar Aceptar para continuar.",
+		checktime_err : "Se ha detectado un desfase horario entre su sistema y el servidor. Debe corregir la hora de su sistema antes de continuar.",
+		checktime_local_time : "Hora de su sistema",
+		checktime_server_time : "Hora del servidor"
+	};
+	LOCALIZED_STRINGS["es"] = {
 		checktime_warn : "Se ha detectado un desfase horario entre su sistema y el servidor. Se recomienda que se corrija antes de pulsar Aceptar para continuar.",
 		checktime_err : "Se ha detectado un desfase horario entre su sistema y el servidor. Debe corregir la hora de su sistema antes de continuar.",
 		checktime_local_time : "Hora de su sistema",
@@ -512,7 +609,14 @@ var Miniapplet13 = (function(window, undefined) {
 		checktime_local_time : "Hora do seu sistema",
 		checktime_server_time : "Hora do servidor"
 	};
-	var DEFAULT_LOCALE = LOCALIZED_STRINGS["es_ES"];
+	LOCALIZED_STRINGS["gl"] = {
+		checktime_warn : "Destectouse un desfase horario entre o seu sistema e o servidor. Recoméndase corrixilo antes de pulsar Aceptar para continuar.",
+		checktime_err : "Destectouse un desfase horario entre o seu sistema e o servidor. Debe corrixir a hora do seu sistema antes de continuar.",
+		checktime_local_time : "Hora do seu sistema",
+		checktime_server_time : "Hora do servidor"
+	};
+	var severeTimeDelay = false;
+	var DEFAULT_LOCALE = LOCALIZED_STRINGS[locale];
 	var currentLocale = DEFAULT_LOCALE;
 	var BUFFER_SIZE = 1024 * 1024;
 	var B64_BUFFER_SIZE = BUFFER_SIZE * 3 / 4;
@@ -526,41 +630,180 @@ var Miniapplet13 = (function(window, undefined) {
 	var CHECKTIME_OBLIGATORY = "CT_OBLIGATORY";
 	var cargarMiniApplet = function() {
 	}
-	var echo = function() {
+	var setLocale = function(newLocale) {
+		locale = newLocale;
+		DEFAULT_LOCALE = LOCALIZED_STRINGS[locale];
+	}
+	var checkTime = function(checkType, maxMillis) {
+
+		if (checkType == undefined || checkType == null
+				|| checkType == CHECKTIME_NO || maxMillis == undefined
+				|| maxMillis == null || maxMillis < /* = */0) {
+			return;
+		}
+		// Hacemos una llamada al servidor para conocer su hora
+		var xhr = invoker.getHttpRequest();
+		xhr.open('GET', document.URL + '/' + Math.random(), false);
+		xhr.send();
+
+		// Recogemos la hora local, nada mas obtener la respuesta del servidor
+		var clientDate = new Date();
+		// Tomamos la hora a partir de la respuesta del servidor. Si esta es 0,
+		// estamos en local
+		var serverDate = new Date(xhr.getResponseHeader("Date"));
+		if (serverDate == null || serverDate.getTime() == 0) {
+			// No hacemos nada si estamos en local
+			return;
+		}
+		var delay = Math.abs(clientDate.getTime() - serverDate.getTime());
+		if (delay >= maxMillis) {
+			if (checkType == CHECKTIME_RECOMMENDED) {
+				invoker.alert(DEFAULT_LOCALE.checktime_warn + "\n"
+						+ DEFAULT_LOCALE.checktime_local_time
+						+ clientDate.toLocaleString() + "\n"
+						+ DEFAULT_LOCALE.checktime_server_time
+						+ serverDate.toLocaleString());
+			} else if (checkType == CHECKTIME_OBLIGATORY) {
+				severeTimeDelay = true;
+				invoker.alert(DEFAULT_LOCALE.checktime_err + "\n"
+						+ DEFAULT_LOCALE.checktime_local_time
+						+ clientDate.toLocaleString() + "\n"
+						+ DEFAULT_LOCALE.checktime_server_time
+						+ serverDate.toLocaleString());
+			}
+		}
+	}
+	var getErrorMessage = function(maSuccessCallback, maErrorCallback,
+			beforeSendCallback, completeCallback) {
+		invoker.invoke(
+		/** command */
+		"getErrorMessage",
+		/** parameters */
+		undefined,
+		/** successCallback */
+		/** successCallback */
+		function(response, xmlReq) {
+			if (maSuccessCallback) {
+				maSuccessCallback(response.msg);
+			}
+		},
+		/** errorCallback */
+		function(params, response, xmlReq) {
+			if (maErrorCallback) {
+				maErrorCallback(undefined, undefined);
+			}
+		},
+		/** beforeSendCallback */
+		beforeSendCallback,
+		/** completeCallback */
+		completeCallback);
+	}
+	var getErrorType = function(maSuccessCallback, maErrorCallback,
+			beforeSendCallback, completeCallback) {
+		invoker.invoke(
+		/** command */
+		"getErrorType",
+		/** parameters */
+		undefined,
+		/** successCallback */
+		/** successCallback */
+		function(response, xmlReq) {
+			if (maSuccessCallback) {
+				maSuccessCallback(response.msg);
+			}
+		},
+		/** errorCallback */
+		function(params, response, xmlReq) {
+			if (maErrorCallback) {
+				maErrorCallback(undefined, undefined);
+			}
+		},
+		/** beforeSendCallback */
+		beforeSendCallback,
+		/** completeCallback */
+		completeCallback);
+	}
+	var getCurrentLog = function(maSuccessCallback, maErrorCallback,
+			beforeSendCallback, completeCallback) {
+		invoker.invoke(
+		/** command */
+		"getCurrentLog",
+		/** parameters */
+		undefined,
+		/** successCallback */
+		/** successCallback */
+		function(response, xmlReq) {
+			if (maSuccessCallback) {
+				maSuccessCallback(response.msg);
+			}
+		},
+		/** errorCallback */
+		function(params, response, xmlReq) {
+			if (maErrorCallback) {
+				maErrorCallback(undefined, undefined);
+			}
+		},
+		/** beforeSendCallback */
+		beforeSendCallback,
+		/** completeCallback */
+		completeCallback);
+	}
+
+	var echo = function(maSuccessCallback, maErrorCallback, beforeSendCallback,
+			completeCallback) {
 		invoker.invoke(
 		/** command */
 		"echo",
 		/** parameters */
 		undefined,
 		/** successCallback */
-		undefined,
+		/** successCallback */
+		function(response, xmlReq) {
+			if (maSuccessCallback) {
+				maSuccessCallback(undefined);
+			}
+		},
 		/** errorCallback */
-		undefined,
+		function(params, response, xmlReq) {
+			if (maErrorCallback) {
+				maErrorCallback(undefined, undefined);
+			}
+		},
 		/** beforeSendCallback */
-		undefined,
+		beforeSendCallback,
 		/** completeCallback */
-		undefined);
+		completeCallback);
 	}
-	var exit = function() {
+	var exit = function(maSuccessCallback, maErrorCallback, beforeSendCallback,
+			completeCallback) {
 		invoker.invoke(
 		/** command */
 		"exit",
 		/** parameters */
 		undefined,
 		/** successCallback */
-		undefined,
+		function(response, xmlReq) {
+			if (maSuccessCallback) {
+				maSuccessCallback(undefined);
+			}
+		},
 		/** errorCallback */
-		undefined,
+		function(params, response, xmlReq) {
+			if (maErrorCallback) {
+				maErrorCallback(undefined, undefined);
+			}
+		},
 		/** beforeSendCallback */
-		undefined,
+		beforeSendCallback,
 		/** completeCallback */
-		undefined);
+		completeCallback);
 	}
-	var setStickySignatory = function(sticky, successCallback, errorCallback) {
+	var setStickySignatory = function(sticky
+	/** adicionales */
+	, maSuccessCallback, maErrorCallback, beforeSendCallback, completeCallback) {
 		var parameters = new Object();
 		parameters.sticky = sticky;
 		var innerCallBack = function() {
-
 		}
 		invoker.invoke(
 		/** command */
@@ -568,116 +811,310 @@ var Miniapplet13 = (function(window, undefined) {
 		/** parameters */
 		parameters,
 		/** successCallback */
-		undefined,
+		function(response, xmlReq) {
+			if (maSuccessCallback) {
+				maSuccessCallback(undefined);
+			}
+		},
 		/** errorCallback */
-		undefined,
+		function(params, response, xmlReq) {
+			if (maErrorCallback) {
+				maErrorCallback(undefined, undefined);
+			}
+		},
 		/** beforeSendCallback */
-		undefined,
+		beforeSendCallback,
 		/** completeCallback */
-		undefined);
+		completeCallback);
 	}
 	var getBase64FromText = function(plainText, charset, maSuccessCallback,
-			maErrorCallback) {
+			maErrorCallback, beforeSendCallback, completeCallback) {
 		var textResponse = new Object();
 		textResponse.error = -2;
 		textResponse.descError = "";
 		textResponse.time = "";
 		textResponse.id = -1;
 		textResponse.msg = "";
-		textResponse.plainText = plainText;
-		textResponse.charset = charset;
-		var param = new Object();
-		param.charset = charset;
-		var innerSuccess = function( /* Any */response,/* String */
-		textStatus, /* jqXHR */jqXHR) {
-			textResponse.error = response.error;
-			textResponse.descError = response.descError;
-			textResponse.time = response.time;
-			textResponse.id = response.id;
-			if (response.msg && response.msg.length > 0 && 0 == response.error) {
-				textResponse.msg = textResponse.msg + response.msg;
-				delete response.msg;
-				delete response.time;
-				delete response.descError;
-				delete response.id;
-				delete response;
-				param.plainText = "";
-				if (textResponse.plainText) {
-					if (textResponse.plainText.length > B64_BUFFER_SIZE) {
-						param.plainText = textResponse.plainText.substring(0,
-								B64_BUFFER_SIZE);
-						textResponse.plainText = textResponse.plainText
-								.substring(B64_BUFFER_SIZE);
-					} else {
-						param.plainText = textResponse.plainText;
-						delete textResponse.plainText;
-					}
-				}
-				if ("" == param.plainText) {
-					if (maSuccessCallback) {
-						maSuccessCallback(textResponse, textStatus, jqXHR);
-					}
-					delete textResponse.msg;
-				} else {
-					invoker.invoke(
-					/** String */
-					"getBase64FromText",
-					/** Any */
-					param,
-					/** successCallback */
-					innerSuccess,
-					/** errorCallback */
-					undefined,
-					/** beforeSendCallback */
-					undefined,
-					/** completeCallback */
-					undefined);
-				}
-			} else if (0 != textResponse.error) {
-				delete textResponse.plainText;
-				responseText.msg = "";
-				if (maErrorCallback) {
-					maErrorCallback(textResponse, textStatus, jqXHR);
-				}
-				delete textResponse.msg;
-			} else {
-				if (maSuccessCallback) {
-					maSuccessCallback(textResponse, textStatus, jqXHR);
-				}
-				delete textResponse.msg;
+		textResponse.dataToSend = plainText;
+		var efectiveBeforeSendCallback = beforeSendCallback;
+		var errorCallback = function(params, item, xmlReq) {
+			if (maErrorCallback) {
+				maErrorCallback(/* String */undefined,/* String */undefined);
 			}
-		};
-		if (textResponse.plainText.length > B64_BUFFER_SIZE) {
-			param.plainText = textResponse.plainText.substring(0,
-					B64_BUFFER_SIZE);
-			textResponse.plainText = textResponse.plainText
-					.substring(B64_BUFFER_SIZE);
-		} else {
-			param.plainText = textResponse.plainText;
-			delete textResponse.plainText;
+			if (completeCallback) {
+				completeCallback(params, item, xmlReq)
+			}
+			delete item.error;
+			delete item.descError;
+			delete item.type;
+			delete item.time;
+			delete item.id;
+			delete item.dataToSend;
+			delete item.msg;
+			delete item;
 		}
-		invoker.invoke(
-		/** String */
-		"getBase64FromText",
-		/** Any */
-		param,
-		/** successCallback */
-		innerSuccess,
-		/** errorCallback */
-		undefined,
-		/** beforeSendCallback */
-		undefined,
-		/** completeCallback */
-		undefined);
+		var paramsInner = new Object();
+		paramsInner.charset = charset;
+		var cont = false;
+		var innerSuccess = function( /* Any */response, /* XMLHttpRequest */
+		xmlReq) {
+			if (response) {
+				textResponse.error = response.error;
+				textResponse.descError = response.descError;
+				textResponse.time = response.time;
+				textResponse.id = response.id;
+				textResponse.msg += response.msg;
+				delete response.error;
+				delete response.type;
+				delete response.id;
+				delete response.time;
+				delete response.msg;
+				delete response;
+			}
+			cont = false;
+			if (textResponse.dataToSend && textResponse.dataToSend.length > 0) {
+				cont = true;
+				if (textResponse.dataToSend.length > BUFFER_SIZE) {
+					paramsInner.plainText = textResponse.dataToSend.substring(
+							0, BUFFER_SIZE);
+					textResponse.dataToSend = textResponse.dataToSend
+							.substring(BUFFER_SIZE);
+				} else {
+					paramsInner.plainText = textResponse.dataToSend;
+					delete textResponse.dataToSend;
+				}
+			}
+			if (!cont) {
+				if (maSuccessCallback) {
+					maSuccessCallback(/* String */textResponse.msg);
+				}
+				if (completeCallback) {
+					completeCallback(undefined, textResponse, xmlReq);
+				}
+				delete textResponse.error;
+				delete textResponse.descError;
+				delete textResponse.time;
+				delete textResponse.id;
+				delete textResponse.type;
+				delete textResponse.dataToSend;
+				delete textResponse.msg;
+				delete textResponse;
+			}
+			if (cont) {
+				invoker.invoke(
+				/** String */
+				"getBase64FromText",
+				/** Any */
+				paramsInner,
+				/** successCallback */
+				innerSuccess,
+				/** errorCallback */
+				errorCallback,
+				/** beforeSendCallback */
+				efectiveBeforeSendCallback,
+				/** completeCallback */
+				undefined);
+				efectiveBeforeSendCallback = null;
+			}
+		}
+		innerSuccess(undefined, undefined);
 	}
-	function setDataRecursive(textResponse, successCallback, errorCallback) {
-
+	var getTextFromBase64 = function(data, charset, maSuccessCallback,
+			maErrorCallback, beforeSendCallback, completeCallback) {
+		var textResponse = new Object();
+		textResponse.error = -2;
+		textResponse.descError = "";
+		textResponse.time = "";
+		textResponse.id = -1;
+		textResponse.msg = "";
+		textResponse.dataToSend = data;
+		var efectiveBeforeSendCallback = beforeSendCallback;
+		var errorCallback = function(params, item, xmlReq) {
+			if (maErrorCallback) {
+				maErrorCallback(/* String */undefined,/* String */undefined);
+			}
+			if (completeCallback) {
+				completeCallback(params, item, xmlReq)
+			}
+			delete item.error;
+			delete item.descError;
+			delete item.type;
+			delete item.time;
+			delete item.id;
+			delete item.dataToSend;
+			delete item.msg;
+			delete item;
+		}
+		var paramsInner = new Object();
+		paramsInner.charset = charset;
+		var cont = false;
+		var innerSuccess = function( /* Any */response, /* XMLHttpRequest */
+		xmlReq) {
+			if (response) {
+				textResponse.error = response.error;
+				textResponse.descError = response.descError;
+				textResponse.time = response.time;
+				textResponse.id = response.id;
+				textResponse.msg += response.msg;
+				delete response.error;
+				delete response.type;
+				delete response.id;
+				delete response.time;
+				delete response.msg;
+				delete response;
+			}
+			cont = false;
+			if (textResponse.dataToSend && textResponse.dataToSend.length > 0) {
+				cont = true;
+				if (textResponse.dataToSend.length > B64_BUFFER_SIZE) {
+					paramsInner.data = textResponse.dataToSend.substring(0,
+							B64_BUFFER_SIZE);
+					textResponse.dataToSend = textResponse.dataToSend
+							.substring(B64_BUFFER_SIZE);
+				} else {
+					paramsInner.data = textResponse.dataToSend;
+					delete textResponse.dataToSend;
+				}
+			}
+			if (!cont) {
+				if (maSuccessCallback) {
+					maSuccessCallback(/* String */textResponse.msg);
+				}
+				if (completeCallback) {
+					completeCallback(undefined, textResponse, xmlReq);
+				}
+				delete textResponse.error;
+				delete textResponse.descError;
+				delete textResponse.time;
+				delete textResponse.id;
+				delete textResponse.type;
+				delete textResponse.dataToSend;
+				delete textResponse.msg;
+				delete textResponse;
+			}
+			if (cont) {
+				invoker.invoke(
+				/** String */
+				"getTextFromBase64",
+				/** Any */
+				paramsInner,
+				/** successCallback */
+				innerSuccess,
+				/** errorCallback */
+				errorCallback,
+				/** beforeSendCallback */
+				efectiveBeforeSendCallback,
+				/** completeCallback */
+				undefined);
+				efectiveBeforeSendCallback = null;
+			}
+		}
+		innerSuccess(undefined, undefined);
 	}
-	function buildDataRecursive(textResponse, successCallback, errorCallback) {
+	var buildDataRecursive = function(textResponse, successCallback,
+			errorCallback) {
+		var paramsInner = new Object();
+		var cont = false;
+		var buildDataRecursiveInner = function( /* Any */response, /* XMLHttpRequest */
+		xmlReq) {
+			if (response) {
+				textResponse.error = response.error;
+				textResponse.descError = response.descError;
+				textResponse.time = response.time;
+				textResponse.id = response.id;
+				delete response.error;
+				delete response.type;
+				delete response.id;
+				delete response.time;
+				delete response;
+			}
+			cont = false;
+			if (textResponse.dataToSend && textResponse.dataToSend.length > 0) {
+				cont = true;
+				if (textResponse.dataToSend.length > BUFFER_SIZE) {
+					paramsInner.data = textResponse.dataToSend.substring(0,
+							BUFFER_SIZE);
+					textResponse.dataToSend = textResponse.dataToSend
+							.substring(BUFFER_SIZE);
+				} else {
+					paramsInner.data = textResponse.dataToSend;
+					delete textResponse.dataToSend;
+				}
+			}
+			if (!cont) {
+				delete textResponse.dataToSend;
+				if (successCallback) {
+					successCallback(textResponse, xmlReq);
+				}
+			}
+			if (cont) {
+				invoker.invoke(
+				/** String */
+				"addData",
+				/** Any */
+				paramsInner,
+				/** successCallback */
+				buildDataRecursiveInner,
+				/** errorCallback */
+				errorCallback,
+				/** beforeSendCallback */
+				undefined,
+				/** completeCallback */
+				undefined);
+			}
 
+		}
+		buildDataRecursiveInner();
+	}
+	var retriveDataRecursive = function(textResponse, successCallback,
+			errorCallback) {
+		var paramsInner = new Object();
+		var cont = false;
+		var retriveDataRecursiveInner = function( /* Any */response, /* XMLHttpRequest */
+		xmlReq) {
+			cont = true;
+			if (response) {
+				textResponse.error = response.error;
+				textResponse.descError = response.descError;
+				textResponse.time = response.time;
+				textResponse.id = response.id;
+				cont = EOF != response.msg;
+				if (cont) {
+					textResponse.msg += response.msg;
+				}
+				delete response.error;
+				delete response.type;
+				delete response.id;
+				delete response.time;
+				delete response.msg;
+				delete response;
+			}
+			if (!cont) {
+				if (successCallback) {
+					successCallback(textResponse, xmlReq);
+				}
+			}
+			if (cont) {
+				invoker.invoke(
+				/** String */
+				"getRemainingData",
+				/** Any */
+				paramsInner,
+				/** successCallback */
+				retriveDataRecursiveInner,
+				/** errorCallback */
+				errorCallback,
+				/** beforeSendCallback */
+				undefined,
+				/** completeCallback */
+				undefined);
+			}
+		}
+		retriveDataRecursiveInner(undefined, undefined);
 	}
 	function signOperation(signId, dataB64, algorithm, format, extraParams,
-			successCallback, errorCallback) {
+			maSuccessCallback, maErrorCallback, beforeSendCallback,
+			completeCallback) {
 		var textResponse = new Object();
 		textResponse.error = -2;
 		textResponse.descError = "";
@@ -685,34 +1122,109 @@ var Miniapplet13 = (function(window, undefined) {
 		textResponse.id = -1;
 		textResponse.msg = "";
 		textResponse.pemCertificate = "";
-		textResponse.base64 = dataB64;
+		textResponse.dataToSend = dataB64;
 		var params = new Object();
 		params.algorithm = algorithm;
 		params.format = format;
 		params.extraParams = extraParams;
-		if (textResponse.base64 && textResponse.base64.length == 0) {
-
-		} else {
-
+		var errorCallback = function(item, textResponse, xmlReq) {
+			if (maErrorCallback) {
+				maErrorCallback(/* String */undefined,/* String */undefined);
+			}
+			if (completeCallback) {
+				completeCallback(undefined, textResponse, xmlReq);
+			}
+			delete textResponse.error;
+			delete textResponse.descError;
+			delete textResponse.time;
+			delete textResponse.id;
+			delete textResponse.type;
+			delete textResponse.dataToSend;
+			delete textResponse.msg;
+			delete textResponse;
 		}
+		var retriveDataRecursiveCallback = function(textResponse, xmlReq) {
+			if (maSuccessCallback) {
+				maSuccessCallback(textResponse.msg);
+			}
+			if (completeCallback) {
+				completeCallback(undefined, textResponse, xmlReq);
+			}
+			delete textResponse.error;
+			delete textResponse.descError;
+			delete textResponse.time;
+			delete textResponse.id;
+			delete textResponse.type;
+			delete textResponse.dataToSend;
+			delete textResponse.msg;
+			delete textResponse;
+		}
+		var signOperationSuccess = function(response, xmlReq) {
+			retriveDataRecursive(response, retriveDataRecursiveCallback,
+					errorCallback);
+		}
+		var buildDataSuccessCallback = function(item, xmlReq) {
+			invoker.invoke(
+			/** String */
+			signId,
+			/** Any */
+			params,
+			/** successCallback */
+			signOperationSuccess,
+			/** errorCallback */
+			errorCallback,
+			/** beforeSendCallback */
+			undefined,
+			/** completeCallback */
+			undefined);
+		}
+		if (beforeSendCallback) {
+			beforeSendCallback(undefined, undefined);
+		}
+		buildDataRecursive(textResponse, buildDataSuccessCallback,
+				errorCallback);
 	}
 
 	var sign = function(dataB64, algorithm, format, params, successCallback,
-			errorCallback) {
+			errorCallback, beforeSendCallback, completeCallback) {
 		signOperation("sign", dataB64, algorithm, format, params,
-				successCallback, errorCallback)
+				successCallback, errorCallback, beforeSendCallback,
+				completeCallback)
 	}
 	var coSign = function(signB64, dataB64, algorithm, format, params,
-			successCallback, errorCallback) {
+			successCallback, errorCallback, beforeSendCallback,
+			completeCallback) {
 		signOperation("coSign", dataB64, algorithm, format, params,
-				successCallback, errorCallback)
+				successCallback, errorCallback, beforeSendCallback,
+				completeCallback)
 	}
 	var counterSign = function(signB64, algorithm, format, params,
-			successCallback, errorCallback) {
+			successCallback, errorCallback, beforeSendCallback,
+			completeCallback) {
 		signOperation("counterSign", dataB64, algorithm, format, params,
-				successCallback, errorCallback)
+				successCallback, errorCallback, beforeSendCallback,
+				completeCallback)
 	}
+	var setServlets = function(storageServlet, retrieverServlet) {
+		// throw "Not Supported!";
+		// do nothing
+	}
+	var getFileNameContentBase64 = function(title, extensions, description,
+			filePath, maSuccessCallback, maErrorCallback, beforeSendCallback,
+			completeCallback) {
+		throw "not Implemented yet";
+	}
+	var getMultiFileNameContentBase64 = function(title, extensions,
+			description, filePath, maSuccessCallback, maErrorCallback,
+			beforeSendCallback, completeCallback) {
+		throw "not Implemented yet";
+	}
+	var saveDataToFile = function(dataB64, title, fileName, extension,
+			description, maSuccessCallback, maErrorCallback,
+			beforeSendCallback, completeCallback) {
+		throw "not Implemented yet";
 
+	}
 	/**
 	 * 
 	 * Metodos que publicamos del objeto MiniApplet
@@ -730,12 +1242,22 @@ var Miniapplet13 = (function(window, undefined) {
 		 * 
 		 * Cliente en si!
 		 */
+		getErrorMessage : getErrorMessage,
+		getErrorType : getErrorType,
+		getCurrentLog : getCurrentLog,
+		setServlets : setServlets,
+		checkTime : checkTime,
 		cargarMiniApplet : cargarMiniApplet,// deprecated
 		exit : exit,
 		echo : echo,
 		sign : sign,
 		coSign : coSign,
 		counterSign : counterSign,
-		getBase64FromText : getBase64FromText
+		getBase64FromText : getBase64FromText,
+		getTextFromBase64 : getTextFromBase64,
+		getFileNameContentBase64 : getFileNameContentBase64,
+		saveDataToFile : saveDataToFile,
+		getMultiFileNameContentBase64 : getMultiFileNameContentBase64
+
 	}
 })(window, undefined);
