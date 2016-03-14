@@ -348,8 +348,7 @@ SearchPortInvoker.prototype.executeTestConnect = function(actualInvoker, port,
 			retorno = actualInvoker._parent.isTestResponseValid(JSON
 					.parse(httpRequest.responseText));
 		}
-		if (httpRequest.readyState == 4 && httpRequest.status == 200 && retorno
-				&& !actualInvoker._connection) {
+		if (httpRequest.readyState == 4 && httpRequest.status == 200 && retorno) {
 			//
 			//
 			// hemos encontrado el puerto!!!
@@ -500,12 +499,12 @@ PortDetectedInvoker.prototype.invoke = function(
 	if (parameters) {
 		request = JSON.stringify(parameters, undefined, 2);
 	}
-	var httpRequest = this._parent.getHttpRequest();
+	var item = this._parent;
+	var httpRequest = item.getHttpRequest();
 	httpRequest.open("POST", this._parent.getURL(command,
 			this._parent._currentPort), true);
 	httpRequest.setRequestHeader("Content-type", "application/json");
 	httpRequest.setRequestHeader("Accept", "application/json; charset=utf-8");
-	var item = this._parent;
 	var f_onreadystatechange = function(event) {
 		var retorno = false;
 		if (beforeSendCallback) {
@@ -530,14 +529,25 @@ PortDetectedInvoker.prototype.invoke = function(
 				completeCallback(parameters, response, httpRequest);
 			}
 		} else if (httpRequest.readyState == 4) {
-			//
-			//
-			// Esto es un error ... vamos a ver como lo solucionamos
-			// lo mejor ... es empezar de nuevo!!!
-			//
-			item._invokers[3]._error = item._NUM_PORTS - 1;
-			item.changeState(3, "", "", command, parameters, successCallback,
-					errorCallback, beforeSendCallback, completeCallback);
+			var cookiePort = item.readCookie(this._PREFIX_APP + "_port");
+			var cookieSession = item.readCookie(this._PREFIX_APP + "_session");
+			if (cookiePort && cookieSession) {
+				//
+				//
+				// Esto es un error ... y lo presentamos
+				item._invokers[3]._error = item._NUM_PORTS - 1;
+				item.changeState(3, "", "", command, parameters,
+						successCallback, errorCallback, beforeSendCallback,
+						completeCallback);
+			} else {
+				//
+				//
+				// Tenemos una caida por timeout
+				//
+				item.changeState(0, "", "", command, parameters,
+						successCallback, errorCallback, beforeSendCallback,
+						completeCallback);
+			}
 			return;
 		}
 	}
@@ -1263,7 +1273,7 @@ var Miniapplet13 = (function(window, undefined) {
 			/** Any */
 			params,
 			/** successCallback */
-			signOperationSuccess,
+			saveDataToFileSuccess,
 			/** errorCallback */
 			errorCallback,
 			/** beforeSendCallback */
@@ -1277,9 +1287,9 @@ var Miniapplet13 = (function(window, undefined) {
 		buildDataRecursive(textResponse, buildDataSuccessCallback,
 				errorCallback);
 	}
-	var getFileNameContentBase64 = function( title, extensions,
-			description, filePath, maSuccessCallback, maErrorCallback,
-			beforeSendCallback, completeCallback) {
+	var getFileNameContentBase64 = function(title, extensions, description,
+			filePath, maSuccessCallback, maErrorCallback, beforeSendCallback,
+			completeCallback) {
 		var textResponse = new Object();
 		textResponse.error = -2;
 		textResponse.descError = "";

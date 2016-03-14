@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -49,6 +50,7 @@ class TimeOutFilter implements ContainerResponseFilter, ContainerRequestFilter, 
 	private int timeout = -1;
 	private BlockingQueue<String> queue = new LinkedBlockingQueue<>();
 	private CloseWindowAdapter adapter;
+	private AtomicBoolean b = new AtomicBoolean(true);
 
 	public TimeOutFilter() {
 
@@ -65,12 +67,18 @@ class TimeOutFilter implements ContainerResponseFilter, ContainerRequestFilter, 
 		try {
 			for (;;) {
 				String item = null;
-				if (-1 == timeout) {
-					queue.take();
+				if (0 >= timeout) {
+					logger.info("No existe timeout!");
+					item = queue.take();
 				} else {
+					logger.info("Esperando por un timeout!");
 					item = queue.poll(timeout, TimeUnit.MINUTES);
 				}
-				if (null == item) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("El valor del item '{}'", (item == null));
+					logger.debug("El valor del Esperando '{}'", b.get());
+				}
+				if (null == item && b.get()) {
 					throw new InterruptedException("Se ha producido un timeout controlado");
 				}
 			}
@@ -84,27 +92,35 @@ class TimeOutFilter implements ContainerResponseFilter, ContainerRequestFilter, 
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * @see javax.ws.rs.container.ContainerResponseFilter#filter(javax.ws.rs.container.ContainerRequestContext,
-	 *      javax.ws.rs.container.ContainerResponseContext)
-	 */
-	public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
-			throws IOException {
-		this.filter(requestContext);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
 	 * @see javax.ws.rs.container.ContainerRequestFilter#filter(javax.ws.rs.container.ContainerRequestContext)
 	 */
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		if (-1 != timeout) {
+		if (0 >= timeout) {
+			b.set(false);
 			try {
 				queue.put("");
 			} catch (InterruptedException e) {
 				// do nothing
 			}
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @see javax.ws.rs.container.ContainerResponseFilter#filter(javax.ws.rs.container.ContainerRequestContext,
+	 *      javax.ws.rs.container.ContainerResponseContext)
+	 */
+	public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
+			throws IOException {
+		if (0 >= timeout) {
+			try {
+				queue.put("");
+			} catch (InterruptedException e) {
+				// do nothing
+			}
+			b.set(true);
 		}
 	}
 
