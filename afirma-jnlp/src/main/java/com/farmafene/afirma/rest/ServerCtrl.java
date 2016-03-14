@@ -120,9 +120,9 @@ public class ServerCtrl {
 		timeoutFilter.setTimeout(timeout);
 		timeoutFilter.setAdapter(closeHandler);
 		executor.execute(timeoutFilter);
+		final CorsFilter cors = new CorsFilter();
 		final ResourceConfig resourceConfig = new ResourceConfig().register(request);
 		resourceConfig.register(timeoutFilter);
-		final CorsFilter cors = new CorsFilter();
 		resourceConfig.register(cors);
 		final ServletHolder aFirmaServlet = new ServletHolder(new ServletContainer(resourceConfig));
 		aFirmaServlet.setInitOrder(0);

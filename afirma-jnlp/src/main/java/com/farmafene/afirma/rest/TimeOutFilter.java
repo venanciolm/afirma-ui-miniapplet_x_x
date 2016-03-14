@@ -96,8 +96,10 @@ class TimeOutFilter implements ContainerResponseFilter, ContainerRequestFilter, 
 	 */
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		if (0 >= timeout) {
+		logger.info("Estamos en el Request con timeout '{}'", timeout);
+		if (0 <= timeout) {
 			b.set(false);
+			logger.info("Estamos en el Request, y hemos puesto el boolean a 'false'");
 			try {
 				queue.put("");
 			} catch (InterruptedException e) {
@@ -114,12 +116,14 @@ class TimeOutFilter implements ContainerResponseFilter, ContainerRequestFilter, 
 	 */
 	public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
 			throws IOException {
-		if (0 >= timeout) {
+		logger.info("Estamos en el Response con timeout '{}'", timeout);
+		if (0 <= timeout) {
 			try {
 				queue.put("");
 			} catch (InterruptedException e) {
 				// do nothing
 			}
+			logger.info("Estamos en el Response, y hemos puesto el boolean a 'true'");
 			b.set(true);
 		}
 	}

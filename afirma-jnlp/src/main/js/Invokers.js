@@ -326,13 +326,15 @@ SearchPortInvoker.prototype.invoke = function(
 	// Enviamos la peticion a la app despues de esperar un tiempo
 	// prudencial
 	var actualInvoker = this;
+	if (beforeSendCallback) {
+		beforeSendCallback(undefined, undefined);
+	}
 	for (i = 0; i < ports.length; i++) {
 		setTimeout(actualInvoker.executeTestConnect,
 				actualInvoker._parent._LAUNCHING_TIME, actualInvoker, ports[i],
 				actualInvoker._parent._sessionId,
 				actualInvoker._parent._CONNECTION_RETRIES, command, parameters,
-				successCallback, errorCallback, beforeSendCallback,
-				completeCallback);
+				successCallback, errorCallback, undefined, completeCallback);
 	}
 }
 SearchPortInvoker.prototype.executeTestConnect = function(actualInvoker, port,
@@ -353,9 +355,15 @@ SearchPortInvoker.prototype.executeTestConnect = function(actualInvoker, port,
 			//
 			// hemos encontrado el puerto!!!
 			//
+			actualInvoker._parent.createCookie(
+					actualInvoker._parent._PREFIX_APP + "_port", port,
+					actualInvoker._parent._MINUTES_TIMEOUT);
+			actualInvoker._parent.createCookie(
+					actualInvoker._parent._PREFIX_APP + "_session", sessionId,
+					actualInvoker._parent._MINUTES_TIMEOUT);
 			actualInvoker._parent.changeState(2, port, sessionId, command,
-					parameters, successCallback, errorCallback,
-					beforeSendCallback, completeCallback);
+					parameters, successCallback, errorCallback, undefined,
+					completeCallback);
 		} else if (timeoutResetCounter == 0) {
 			actualInvoker._parent.changeState(3, "", "", command, parameters,
 					successCallback, errorCallback, beforeSendCallback,
@@ -438,8 +446,12 @@ PortByCookieInvoker.prototype.invoke = function(
 			//
 			// hemos encontrado el puerto!!!
 			//
+			item.createCookie(item._PREFIX_APP + "_port", testPort,
+					item._MINUTES_TIMEOUT);
+			item.createCookie(item._PREFIX_APP + "_session", testSession,
+					item._MINUTES_TIMEOUT);
 			item.changeState(2, testPort, testSession, command, parameters,
-					successCallback, errorCallback, beforeSendCallback,
+					successCallback, undefined, beforeSendCallback,
 					completeCallback);
 		} else if (httpRequest.readyState == 4) {
 			//
@@ -447,10 +459,13 @@ PortByCookieInvoker.prototype.invoke = function(
 			// debemos buscar un nuevo puerto!
 			//
 			item.changeState(0, "", "", command, parameters, successCallback,
-					errorCallback, beforeSendCallback, completeCallback);
+					errorCallback, undefined, completeCallback);
 		}
 	}
 	httpRequest.onreadystatechange = f_onreadystatechange;
+	if (beforeSendCallback) {
+		beforeSendCallback(parameters, httpRequest);
+	}
 	httpRequest.send();
 }
 /**
@@ -507,9 +522,6 @@ PortDetectedInvoker.prototype.invoke = function(
 	httpRequest.setRequestHeader("Accept", "application/json; charset=utf-8");
 	var f_onreadystatechange = function(event) {
 		var retorno = false;
-		if (beforeSendCallback) {
-			beforeSendCallback(parameters, httpRequest);
-		}
 		if (httpRequest.readyState == 4 && httpRequest.status == 200) {
 			response = JSON.parse(httpRequest.responseText);
 			if (response.error == 0) {
@@ -531,7 +543,7 @@ PortDetectedInvoker.prototype.invoke = function(
 		} else if (httpRequest.readyState == 4) {
 			var cookiePort = item.readCookie(this._PREFIX_APP + "_port");
 			var cookieSession = item.readCookie(this._PREFIX_APP + "_session");
-			if (cookiePort && cookieSession) {
+			if (cookiePort && cookieSession || 0 == httpRequest.status) {
 				//
 				//
 				// Esto es un error ... y lo presentamos
@@ -552,6 +564,9 @@ PortDetectedInvoker.prototype.invoke = function(
 		}
 	}
 	httpRequest.onreadystatechange = f_onreadystatechange;
+	if (beforeSendCallback) {
+		beforeSendCallback(parameters, httpRequest);
+	}
 	httpRequest.send(request);
 }
 /**
@@ -691,16 +706,35 @@ var Miniapplet13 = (function(window, undefined) {
 		/** parameters */
 		undefined,
 		/** successCallback */
-		/** successCallback */
 		function(response, xmlReq) {
 			if (maSuccessCallback) {
 				maSuccessCallback(response.msg);
 			}
 		},
 		/** errorCallback */
-		function(params, response, xmlReq) {
+		function(params, textResponse, xmlReq) {
 			if (maErrorCallback) {
-				maErrorCallback(undefined, undefined);
+				var errorThrow = null;
+				if (textResponse) {
+					errorThrow = textResponse.descError;
+				}
+				var statusText = "Connection Closed!";
+				if (xmlReq) {
+					statusText = xmlReq.statusText;
+				}
+				maErrorCallback(statusText, errorThrow);
+			}
+			if (completeCallback) {
+				completeCallback(params, textResponse, xmlReq);
+			}
+			if (textResponse) {
+				delete textResponse.error;
+				delete textResponse.descError;
+				delete textResponse.time;
+				delete textResponse.id;
+				delete textResponse.type;
+				delete textResponse.msg;
+				delete textResponse;
 			}
 		},
 		/** beforeSendCallback */
@@ -716,16 +750,35 @@ var Miniapplet13 = (function(window, undefined) {
 		/** parameters */
 		undefined,
 		/** successCallback */
-		/** successCallback */
 		function(response, xmlReq) {
 			if (maSuccessCallback) {
 				maSuccessCallback(response.msg);
 			}
 		},
 		/** errorCallback */
-		function(params, response, xmlReq) {
+		function(params, textResponse, xmlReq) {
 			if (maErrorCallback) {
-				maErrorCallback(undefined, undefined);
+				var errorThrow = null;
+				if (textResponse) {
+					errorThrow = textResponse.descError;
+				}
+				var statusText = "Connection Closed!";
+				if (xmlReq) {
+					statusText = xmlReq.statusText;
+				}
+				maErrorCallback(statusText, errorThrow);
+			}
+			if (completeCallback) {
+				completeCallback(params, textResponse, xmlReq);
+			}
+			if (textResponse) {
+				delete textResponse.error;
+				delete textResponse.descError;
+				delete textResponse.time;
+				delete textResponse.id;
+				delete textResponse.type;
+				delete textResponse.msg;
+				delete textResponse;
 			}
 		},
 		/** beforeSendCallback */
@@ -741,16 +794,35 @@ var Miniapplet13 = (function(window, undefined) {
 		/** parameters */
 		undefined,
 		/** successCallback */
-		/** successCallback */
 		function(response, xmlReq) {
 			if (maSuccessCallback) {
 				maSuccessCallback(response.msg);
 			}
 		},
 		/** errorCallback */
-		function(params, response, xmlReq) {
+		function(params, textResponse, xmlReq) {
 			if (maErrorCallback) {
-				maErrorCallback(undefined, undefined);
+				var errorThrow = null;
+				if (textResponse) {
+					errorThrow = textResponse.descError;
+				}
+				var statusText = "Connection Closed!";
+				if (xmlReq) {
+					statusText = xmlReq.statusText;
+				}
+				maErrorCallback(statusText, errorThrow);
+			}
+			if (completeCallback) {
+				completeCallback(params, textResponse, xmlReq);
+			}
+			if (textResponse) {
+				delete textResponse.error;
+				delete textResponse.descError;
+				delete textResponse.time;
+				delete textResponse.id;
+				delete textResponse.type;
+				delete textResponse.msg;
+				delete textResponse;
 			}
 		},
 		/** beforeSendCallback */
@@ -767,16 +839,35 @@ var Miniapplet13 = (function(window, undefined) {
 		/** parameters */
 		undefined,
 		/** successCallback */
-		/** successCallback */
 		function(response, xmlReq) {
 			if (maSuccessCallback) {
-				maSuccessCallback(undefined);
+				maSuccessCallback(response.msg);
 			}
 		},
 		/** errorCallback */
-		function(params, response, xmlReq) {
+		function(params, textResponse, xmlReq) {
 			if (maErrorCallback) {
-				maErrorCallback(undefined, undefined);
+				var errorThrow = null;
+				if (textResponse) {
+					errorThrow = textResponse.descError;
+				}
+				var statusText = "Connection Closed!";
+				if (xmlReq) {
+					statusText = xmlReq.statusText;
+				}
+				maErrorCallback(statusText, errorThrow);
+			}
+			if (completeCallback) {
+				completeCallback(params, textResponse, xmlReq);
+			}
+			if (textResponse) {
+				delete textResponse.error;
+				delete textResponse.descError;
+				delete textResponse.time;
+				delete textResponse.id;
+				delete textResponse.type;
+				delete textResponse.msg;
+				delete textResponse;
 			}
 		},
 		/** beforeSendCallback */
@@ -794,13 +885,33 @@ var Miniapplet13 = (function(window, undefined) {
 		/** successCallback */
 		function(response, xmlReq) {
 			if (maSuccessCallback) {
-				maSuccessCallback(undefined);
+				maSuccessCallback(response.msg);
 			}
 		},
 		/** errorCallback */
-		function(params, response, xmlReq) {
+		function(params, textResponse, xmlReq) {
 			if (maErrorCallback) {
-				maErrorCallback(undefined, undefined);
+				var errorThrow = null;
+				if (textResponse) {
+					errorThrow = textResponse.descError;
+				}
+				var statusText = "Connection Closed!";
+				if (xmlReq) {
+					statusText = xmlReq.statusText;
+				}
+				maErrorCallback(statusText, errorThrow);
+			}
+			if (completeCallback) {
+				completeCallback(params, textResponse, xmlReq);
+			}
+			if (textResponse) {
+				delete textResponse.error;
+				delete textResponse.descError;
+				delete textResponse.time;
+				delete textResponse.id;
+				delete textResponse.type;
+				delete textResponse.msg;
+				delete textResponse;
 			}
 		},
 		/** beforeSendCallback */
@@ -823,13 +934,33 @@ var Miniapplet13 = (function(window, undefined) {
 		/** successCallback */
 		function(response, xmlReq) {
 			if (maSuccessCallback) {
-				maSuccessCallback(undefined);
+				maSuccessCallback(response.msg);
 			}
 		},
 		/** errorCallback */
-		function(params, response, xmlReq) {
+		function(params, textResponse, xmlReq) {
 			if (maErrorCallback) {
-				maErrorCallback(undefined, undefined);
+				var errorThrow = null;
+				if (textResponse) {
+					errorThrow = textResponse.descError;
+				}
+				var statusText = "Connection Closed!";
+				if (xmlReq) {
+					statusText = xmlReq.statusText;
+				}
+				maErrorCallback(statusText, errorThrow);
+			}
+			if (completeCallback) {
+				completeCallback(params, textResponse, xmlReq);
+			}
+			if (textResponse) {
+				delete textResponse.error;
+				delete textResponse.descError;
+				delete textResponse.time;
+				delete textResponse.id;
+				delete textResponse.type;
+				delete textResponse.msg;
+				delete textResponse;
 			}
 		},
 		/** beforeSendCallback */
@@ -1139,19 +1270,29 @@ var Miniapplet13 = (function(window, undefined) {
 		params.extraParams = extraParams;
 		var errorCallback = function(item, textResponse, xmlReq) {
 			if (maErrorCallback) {
-				maErrorCallback(/* String */undefined,/* String */undefined);
+				var errorThrow = null;
+				if (textResponse) {
+					errorThrow = textResponse.descError;
+				}
+				var statusText = "Connection Closed!";
+				if (xmlReq) {
+					statusText = xmlReq.statusText;
+				}
+				maErrorCallback(statusText, errorThrow);
 			}
 			if (completeCallback) {
 				completeCallback(params, textResponse, xmlReq);
 			}
-			delete textResponse.error;
-			delete textResponse.descError;
-			delete textResponse.time;
-			delete textResponse.id;
-			delete textResponse.type;
-			delete textResponse.dataToSend;
-			delete textResponse.msg;
-			delete textResponse;
+			if (textResponse) {
+				delete textResponse.error;
+				delete textResponse.descError;
+				delete textResponse.time;
+				delete textResponse.id;
+				delete textResponse.type;
+				delete textResponse.dataToSend;
+				delete textResponse.msg;
+				delete textResponse;
+			}
 		}
 		var retriveDataRecursiveCallback = function(textResponse, xmlReq) {
 			if (maSuccessCallback) {
@@ -1204,14 +1345,14 @@ var Miniapplet13 = (function(window, undefined) {
 	var coSign = function(signB64, dataB64, algorithm, format, params,
 			successCallback, errorCallback, beforeSendCallback,
 			completeCallback) {
-		signOperation("coSign", dataB64, algorithm, format, params,
+		signOperation("coSign", signB64, algorithm, format, params,
 				successCallback, errorCallback, beforeSendCallback,
 				completeCallback)
 	}
 	var counterSign = function(signB64, algorithm, format, params,
 			successCallback, errorCallback, beforeSendCallback,
 			completeCallback) {
-		signOperation("counterSign", dataB64, algorithm, format, params,
+		signOperation("counterSign", signB64, algorithm, format, params,
 				successCallback, errorCallback, beforeSendCallback,
 				completeCallback)
 	}
@@ -1449,6 +1590,7 @@ var Miniapplet13 = (function(window, undefined) {
 		sign : sign,
 		coSign : coSign,
 		counterSign : counterSign,
+		setStickySignatory : setStickySignatory,
 		getBase64FromText : getBase64FromText,
 		getTextFromBase64 : getTextFromBase64,
 		getFileNameContentBase64 : getFileNameContentBase64,
@@ -1458,7 +1600,3 @@ var Miniapplet13 = (function(window, undefined) {
 		alert : alert
 	}
 })(window, undefined);
-
-if (window && window.bootbox && bootbox) {
-	Miniapplet13.setAlert(bootbox.alert);
-}
