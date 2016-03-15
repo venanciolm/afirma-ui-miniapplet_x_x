@@ -541,9 +541,7 @@ PortDetectedInvoker.prototype.invoke = function(
 				completeCallback(parameters, response, httpRequest);
 			}
 		} else if (httpRequest.readyState == 4) {
-			var cookiePort = item.readCookie(this._PREFIX_APP + "_port");
-			var cookieSession = item.readCookie(this._PREFIX_APP + "_session");
-			if (cookiePort && cookieSession || 0 == httpRequest.status) {
+			if (httpRequest.status == 0) {
 				//
 				//
 				// Esto es un error ... y lo presentamos
@@ -551,15 +549,14 @@ PortDetectedInvoker.prototype.invoke = function(
 				item.changeState(3, "", "", command, parameters,
 						successCallback, errorCallback, beforeSendCallback,
 						completeCallback);
-			} else {
-				//
-				//
-				// Tenemos una caida por timeout
-				//
-				item.changeState(0, "", "", command, parameters,
-						successCallback, errorCallback, beforeSendCallback,
-						completeCallback);
+				return;
 			}
+			//
+			//
+			// Tenemos una caida por timeout
+			//
+			item.changeState(0, "", "", command, parameters, successCallback,
+					errorCallback, beforeSendCallback, completeCallback);
 			return;
 		}
 	}
@@ -1030,7 +1027,7 @@ var Miniapplet13 = (function(window, undefined) {
 					maSuccessCallback(/* String */textResponse.msg);
 				}
 				if (completeCallback) {
-					completeCallback(undefined, textResponse, xmlReq);
+					completeCallback(paramsInner, textResponse, xmlReq);
 				}
 				delete textResponse.error;
 				delete textResponse.descError;
@@ -1122,7 +1119,7 @@ var Miniapplet13 = (function(window, undefined) {
 					maSuccessCallback(/* String */textResponse.msg);
 				}
 				if (completeCallback) {
-					completeCallback(undefined, textResponse, xmlReq);
+					completeCallback(paramsInner, textResponse, xmlReq);
 				}
 				delete textResponse.error;
 				delete textResponse.descError;
@@ -1153,7 +1150,7 @@ var Miniapplet13 = (function(window, undefined) {
 		innerSuccess(undefined, undefined);
 	}
 	var buildDataRecursive = function(textResponse, successCallback,
-			errorCallback) {
+			errorCallback, beforeSendCallback, completeCallback) {
 		var paramsInner = new Object();
 		var cont = false;
 		var buildDataRecursiveInner = function( /* Any */response, /* XMLHttpRequest */
@@ -1199,16 +1196,16 @@ var Miniapplet13 = (function(window, undefined) {
 				/** errorCallback */
 				errorCallback,
 				/** beforeSendCallback */
-				undefined,
+				beforeSendCalback,
 				/** completeCallback */
-				undefined);
+				completeCallback);
 			}
 
 		}
-		buildDataRecursiveInner();
+		buildDataRecursiveInner(undefined, undefined);
 	}
 	var retriveDataRecursive = function(textResponse, successCallback,
-			errorCallback) {
+			errorCallback, beforeSendCallback, completeCallback) {
 		var paramsInner = new Object();
 		var cont = false;
 		var retriveDataRecursiveInner = function( /* Any */response, /* XMLHttpRequest */
@@ -1233,6 +1230,9 @@ var Miniapplet13 = (function(window, undefined) {
 			if (!cont) {
 				if (successCallback) {
 					successCallback(textResponse, xmlReq);
+				}
+				if (completeCallback) {
+					completeCallback(undefined, textResponse, xmlReq);
 				}
 			}
 			if (cont) {
@@ -1301,14 +1301,6 @@ var Miniapplet13 = (function(window, undefined) {
 			if (completeCallback) {
 				completeCallback(params, textResponse, xmlReq);
 			}
-			delete textResponse.error;
-			delete textResponse.descError;
-			delete textResponse.time;
-			delete textResponse.id;
-			delete textResponse.type;
-			delete textResponse.dataToSend;
-			delete textResponse.msg;
-			delete textResponse;
 		}
 		var signOperationSuccess = function(response, xmlReq) {
 			retriveDataRecursive(response, retriveDataRecursiveCallback,
@@ -1377,19 +1369,29 @@ var Miniapplet13 = (function(window, undefined) {
 		params.description = description;
 		var errorCallback = function(item, textResponse, xmlReq) {
 			if (maErrorCallback) {
-				maErrorCallback(/* String */undefined,/* String */undefined);
+				var errorThrow = null;
+				if (textResponse) {
+					errorThrow = textResponse.descError;
+				}
+				var statusText = "Connection Closed!";
+				if (xmlReq) {
+					statusText = xmlReq.statusText;
+				}
+				maErrorCallback(statusText, errorThrow);
 			}
 			if (completeCallback) {
 				completeCallback(params, textResponse, xmlReq);
 			}
-			delete textResponse.error;
-			delete textResponse.descError;
-			delete textResponse.time;
-			delete textResponse.id;
-			delete textResponse.type;
-			delete textResponse.dataToSend;
-			delete textResponse.msg;
-			delete textResponse;
+			if (textResponse) {
+				delete textResponse.error;
+				delete textResponse.descError;
+				delete textResponse.time;
+				delete textResponse.id;
+				delete textResponse.type;
+				delete textResponse.dataToSend;
+				delete textResponse.msg;
+				delete textResponse;
+			}
 		}
 		var saveDataToFileSuccess = function(textResponse, xmlReq) {
 			if (maSuccessCallback) {
@@ -1444,19 +1446,29 @@ var Miniapplet13 = (function(window, undefined) {
 		params.filePath = filePath;
 		var errorCallback = function(item, textResponse, xmlReq) {
 			if (maErrorCallback) {
-				maErrorCallback(/* String */undefined,/* String */undefined);
+				var errorThrow = null;
+				if (textResponse) {
+					errorThrow = textResponse.descError;
+				}
+				var statusText = "Connection Closed!";
+				if (xmlReq) {
+					statusText = xmlReq.statusText;
+				}
+				maErrorCallback(statusText, errorThrow);
 			}
 			if (completeCallback) {
 				completeCallback(params, textResponse, xmlReq);
 			}
-			delete textResponse.error;
-			delete textResponse.descError;
-			delete textResponse.time;
-			delete textResponse.id;
-			delete textResponse.type;
-			delete textResponse.dataToSend;
-			delete textResponse.msg;
-			delete textResponse;
+			if (textResponse) {
+				delete textResponse.error;
+				delete textResponse.descError;
+				delete textResponse.time;
+				delete textResponse.id;
+				delete textResponse.type;
+				delete textResponse.dataToSend;
+				delete textResponse.msg;
+				delete textResponse;
+			}
 		}
 		var retriveDataRecursiveCallback = function(textResponse, xmlReq) {
 			if (maSuccessCallback) {
@@ -1465,21 +1477,24 @@ var Miniapplet13 = (function(window, undefined) {
 			if (completeCallback) {
 				completeCallback(params, textResponse, xmlReq);
 			}
-			delete textResponse.error;
-			delete textResponse.descError;
-			delete textResponse.time;
-			delete textResponse.id;
-			delete textResponse.type;
-			delete textResponse.dataToSend;
-			delete textResponse.msg;
-			delete textResponse;
 		}
-		var getFileNameContentBase64Callback = function(textResponse, xmlReq) {
-			retriveDataRecursive(response, retriveDataRecursiveCallback,
-					errorCallback);
-		}
-		if (beforeSendCallback) {
-			beforeSendCallback(params, undefined);
+		var getFileNameContentBase64Callback = function(response, xmlReq) {
+			textResponse.id = response.id;
+			textResponse.error = response.error;
+			textResponse.type = response.type;
+			textResponse.msg = response.msg;
+			textResponse.time = response.time;
+			textResponse.descError = response.descError;
+
+			delete response.id;
+			delete response.error;
+			delete response.type;
+			delete response.msg;
+			delete response.time;
+			delete response.descError;
+			delete response;
+			retriveDataRecursive(textResponse, retriveDataRecursiveCallback,
+					errorCallback, undefined, completeCallback);
 		}
 		invoker.invoke(
 		/** String */
@@ -1491,7 +1506,7 @@ var Miniapplet13 = (function(window, undefined) {
 		/** errorCallback */
 		errorCallback,
 		/** beforeSendCallback */
-		undefined,
+		beforeSendCallback,
 		/** completeCallback */
 		undefined);
 	}
